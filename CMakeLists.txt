@@ -4,41 +4,19 @@ project(vin LANGUAGES CXX )
 ################################
 ####### PREP FOR TORCH #########
 ################################
-
-# Make sure conda is activated first.
-if(NOT DEFINED ENV{CONDA_PREFIX})
-  message(FATAL_ERROR " Conda must be activated for this build to proceed.")
-  return()
-else()
-  set(_python_exe $ENV{CONDA_PREFIX}/bin/python)
+if (EXISTS "/opt/homebrew/Cellar")
+  file (GLOB versions RELATIVE /opt/homebrew/Cellar /opt/homebrew/Cellar/libtorch/*)
+  foreach (version ${versions})
+    if (IS_DIRECTORY /opt/homebrew/Cellar/${version})
+      set(CMAKE_PREFIX_PATH /opt/homebrew/Cellar/${version}/share/cmake/Torch)
+    endif ()
+  endforeach ()
 endif ()
-
-# Use conda's python to get the site packages directory
-function(getsitepackages outvar)
-  set(_fixup_cmd "import sys;print(list(filter(lambda x: x.endswith('site-packages'), sys.path))[0])")
-  execute_process(
-    COMMAND "${_python_exe}" -c "${_fixup_cmd}"
-    RESULT_VARIABLE _getpath_exitcode
-    OUTPUT_VARIABLE _getpath_text)
-  if(NOT _getpath_exitcode EQUAL 0)
-    message(ERROR "Failed to get the cmake path for torch. Are you sure torch is installed for python?")
-    message(FATAL_ERROR " Python site-packages failed with error code: ${_getpath_exitcode}")
-  endif()
-  string(STRIP "${_getpath_text}" _path_stripped)
-  set(${outvar} "${_path_stripped}" PARENT_SCOPE)
-endfunction()
-
-getsitepackages(PYTHON_SITE_PACKAGES)
-
-# Now use the site packages to add some custom cmake directories
-set(_TORCH_CMAKE_DIR "${PYTHON_SITE_PACKAGES}/torch/share/cmake")
-set(CMAKE_PREFIX_PATH "${_TORCH_CMAKE_DIR}")
 
 
 #############################################
 ####### Setting up compiler options #########
 #############################################
-#### bin2c for models during build
 include(FindPkgConfig REQUIRED)
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -78,7 +56,7 @@ target_include_directories(filterdag PRIVATE "include/" ${TORCH_INCLUDE_DIRS} ${
 ########################################
 ####### Build the testing files ########
 ########################################
-if (BUILD_TESTING)
+if (DEFINED Catch2_DIR)
   message("HELLO")
   add_executable(tests test/filter_sys/dag_tests.cpp test/filter_sys/lib_tests.cpp)
   target_include_directories(tests PRIVATE "include/" ${CATCH_INCLUDE_DIR} ${TORCH_INCLUDE_DIRS})
