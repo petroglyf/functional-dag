@@ -16,7 +16,9 @@ class Filterdag < Formula
   # end
 
   depends_on "cmake" => :build
-  # option :cxx20
+  depends_on "catch2" => :build
+  depends_on "libtorch" => :build
+  depends_on "jsoncpp" => :build
 
   def install
     # ENV.cxx20 if build.cxx20?
@@ -26,6 +28,8 @@ class Filterdag < Formula
       system "cmake", "..", *args
       system "make", "install"
     end
+
+
     # ENV.deparallelize
     # system "./configure", *std_configure_args, "--disable-silent-rules"
     # system "cmake", "-S", ".", "-B", "build", *std_cmake_args
