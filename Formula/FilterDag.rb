@@ -17,7 +17,6 @@ class Filterdag < Formula
 
   depends_on "cmake" => :build
   depends_on "catch2" => :build
-  depends_on "libtorch" => :build
   depends_on "jsoncpp" => :build
 
   def install

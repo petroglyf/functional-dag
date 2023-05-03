@@ -7,11 +7,7 @@
 #include <thread>         // std::this_thread::sleep_for
 #include <chrono>         // std::chrono::seconds
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#include <torch/torch.h>
-#pragma GCC diagnostic pop
-
+#include <filter_sys/dlpack.h>
 #include <filter_sys/lib_utils.h>
 #include "json/json.h"
 

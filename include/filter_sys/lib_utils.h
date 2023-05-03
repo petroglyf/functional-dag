@@ -16,13 +16,10 @@
 #include <string>
 #include <vector>
 #include <filesystem>
+#include <unordered_map>
 #include <filter_sys/dag_interface.hpp>
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wdeprecated-declarations"
-#include <torch/torch.h>
-#pragma GCC diagnostic pop
-
 #include <filter_sys/filter_sys.hpp>
+#include <filter_sys/dlpack.h>
 
 using namespace std;
 namespace fs = std::filesystem;
@@ -32,8 +29,8 @@ namespace fn_dag {
     SOURCE, FILTER, COMBINER, SINK, UNDEFINED
   } MODULE_TYPE;
 
-  typedef fn_dag::dag_source<torch::Tensor> module_source;
-  typedef fn_dag::dag_node<torch::Tensor, torch::Tensor> module_transmit;
+  typedef fn_dag::dag_source<DLTensor> module_source;
+  typedef fn_dag::dag_node<DLTensor, DLTensor> module_transmit;
 
   class module {
   public:

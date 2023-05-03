@@ -10,13 +10,13 @@ const std::string expected_json = \
 class src_mock : fn_dag::module_source {
   src_mock() {}
   ~src_mock() {}
-  torch::Tensor *update() {return nullptr;}
+  DLTensor *update() {return nullptr;}
 };
 
 class node_mock : fn_dag::module_transmit {
   node_mock() {}
   ~node_mock() {}
-  torch::Tensor *update(const torch::Tensor *) {return nullptr;}
+  DLTensor *update(const DLTensor *) {return nullptr;}
 };
 
 
