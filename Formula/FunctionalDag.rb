@@ -1,10 +1,10 @@
 require "formula"
 
-class Filterdag < Formula
+class Functionaldag < Formula
   desc "A library for building functional dags"
   homepage "https://github.com/petrogly-ph/functional-dag"
   url "https://github.com/petrogly-ph/functional-dag/archive/refs/tags/brew.tar.gz"
-  # sha256 "85cc828a96735bdafcf29eb6291ca91bac846579bcef7308536e0c875d6c81d7"
+  sha256 "0f014e0b3f73b4fc2f323d49cb310ed564e8be081f0526588d6b09d1ac90784e"
   license "MIT"
   version "1.0"
 

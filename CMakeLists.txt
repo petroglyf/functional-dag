@@ -57,11 +57,19 @@ endif()
 ########################################
 ####### Install specification ##########
 ########################################
-target_sources(functional_dag PUBLIC 
-    ${PROJECT_SOURCE_DIR}/include/filter_sys/dag_interface.hpp
-    ${PROJECT_SOURCE_DIR}/include/filter_sys/lib_utils.h
-    ${PROJECT_SOURCE_DIR}/include/filter_sys/dlpack.h
-    ${PROJECT_SOURCE_DIR}/include/filter_sys/dag_utils.hpp)
+target_sources(functional_dag INTERFACE 
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/dag_interface.hpp>
+    $<INSTALL_INTERFACE:include/filter_sys/dag_interface.hpp>
+
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/lib_utils.h>
+    $<INSTALL_INTERFACE:include/filter_sys/lib_utils.h>
+    
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/dlpack.h>
+    $<INSTALL_INTERFACE:include/filter_sys/dlpack.h>
+    
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/dag_utils.hpp>
+    $<INSTALL_INTERFACE:include/filter_sys/dag_utils.hpp>)
+
 get_target_property(FN_DAG_PUBLIC_HEADERS functional_dag INTERFACE_SOURCES)
 set_target_properties(functional_dag PROPERTIES PUBLIC_HEADER "${FN_DAG_PUBLIC_HEADERS}")
 
@@ -70,9 +78,9 @@ install(TARGETS functional_dag
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
-    PUBLIC_HEADER DESTINATION include)
+    PUBLIC_HEADER DESTINATION include/functional_dag)
 
-# install(EXPORT dag_install
-#     FILE FunctionalDagConfig.cmake
-#     NAMESPACE FunctionalDag::
-#     DESTINATION lib/cmake/functional_dag)
+install(EXPORT dag_install
+    FILE FunctionalDagConfig.cmake
+    NAMESPACE FunctionalDag::
+    DESTINATION lib/cmake/functional_dag)
