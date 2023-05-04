@@ -35,9 +35,10 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 ########################################
 ####### Building specification #########
 ########################################
-add_library(filterdag STATIC src/filter_sys/dag_manager.cpp src/filter_sys/libutils.cpp)
-target_include_directories(filterdag PRIVATE "include/" ${JSONCPP_INCLUDE_DIRS})
-
+add_library(functional_dag SHARED src/filter_sys/dag_manager.cpp src/filter_sys/libutils.cpp)
+target_include_directories(functional_dag PRIVATE "include/" ${JSONCPP_INCLUDE_DIRS})
+target_link_directories(functional_dag PRIVATE ${JSONCPP_LIBRARY_DIRS})
+target_link_libraries(functional_dag ${JSONCPP_LIBRARIES})
 
 ########################################
 ####### Build the testing files ########
@@ -46,38 +47,32 @@ if (DEFINED Catch2_DIR)
   add_executable(tests test/filter_sys/dag_tests.cpp test/filter_sys/lib_tests.cpp)
   target_include_directories(tests PRIVATE "include/" ${CATCH_INCLUDE_DIR})
   target_link_directories(tests PRIVATE ${CATCH_LIBRARY_DIRS} ${JSONCPP_LIBRARY_DIRS})
-  target_link_libraries(tests filterdag Catch2::Catch2WithMain ${JSONCPP_LIBRARIES})
+  target_link_libraries(tests functional_dag Catch2::Catch2WithMain ${JSONCPP_LIBRARIES})
 
   include(CTest)
   include(Catch)
   catch_discover_tests(tests)
 endif()
 
-
 ########################################
 ####### Install specification ##########
 ########################################
-target_sources(filterdag PUBLIC FILE_SET HEADERS
-  BASE_DIRS include/
-  FILES 
-    include/filter_sys/filter_sys.hpp 
-    include/filter_sys/dag_interface.hpp
-    include/filter_sys/dag_fanout_impl.hpp
-    include/filter_sys/dag_node_impl.hpp
-    include/filter_sys/dag_impl.hpp
-    include/filter_sys/lib_utils.h
-    include/filter_sys/dlpack.h
-    include/filter_sys/dag_utils.hpp)
+target_sources(functional_dag PUBLIC 
+    ${PROJECT_SOURCE_DIR}/include/filter_sys/dag_interface.hpp
+    ${PROJECT_SOURCE_DIR}/include/filter_sys/lib_utils.h
+    ${PROJECT_SOURCE_DIR}/include/filter_sys/dlpack.h
+    ${PROJECT_SOURCE_DIR}/include/filter_sys/dag_utils.hpp)
+get_target_property(FN_DAG_PUBLIC_HEADERS functional_dag INTERFACE_SOURCES)
+set_target_properties(functional_dag PROPERTIES PUBLIC_HEADER "${FN_DAG_PUBLIC_HEADERS}")
 
-install(TARGETS filterdag 
-    EXPORT filterdagTargets
-    FILE_SET HEADERS
+install(TARGETS functional_dag 
+    EXPORT dag_install
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
-    INCLUDES DESTINATION include)
+    PUBLIC_HEADER DESTINATION include)
 
-install(EXPORT filterdagTargets
-    FILE FilterDagConfig.cmake
-    NAMESPACE FilterDag::
-    DESTINATION lib/cmake/filterdag)
+# install(EXPORT dag_install
+#     FILE FunctionalDagConfig.cmake
+#     NAMESPACE FunctionalDag::
+#     DESTINATION lib/cmake/functional_dag)

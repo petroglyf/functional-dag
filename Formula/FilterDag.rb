@@ -3,7 +3,7 @@ require "formula"
 class Filterdag < Formula
   desc "A library for building functional dags"
   homepage "https://github.com/petrogly-ph/functional-dag"
-  url "https://github.com/petrogly-ph/functional-dag"
+  url "https://github.com/petrogly-ph/functional-dag/archive/refs/tags/brew.tar.gz"
   # sha256 "85cc828a96735bdafcf29eb6291ca91bac846579bcef7308536e0c875d6c81d7"
   license "MIT"
   version "1.0"
@@ -16,7 +16,7 @@ class Filterdag < Formula
   # end
 
   depends_on "cmake" => :build
-  depends_on "catch2" => :build
+  depends_on "catch2" => :test
   depends_on "jsoncpp" => :build
 
   def install
