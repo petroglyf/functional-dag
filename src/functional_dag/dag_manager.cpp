@@ -1,6 +1,6 @@
-#include "filter_sys/dag_impl.hpp"
-#include "filter_sys/dag_node_impl.hpp"
-#include "filter_sys/dag_interface.hpp"
+#include "functional_dag/dag_impl.hpp"
+#include "functional_dag/dag_node_impl.hpp"
+#include "functional_dag/dag_interface.hpp"
 
 namespace fn_dag {
   bool __g_filter_off = false;

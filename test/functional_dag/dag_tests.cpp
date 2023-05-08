@@ -1,6 +1,6 @@
 #include <catch2/catch_test_macros.hpp>
-#include <filter_sys/fn_dag_interface.hpp>
-#include "filter_sys/filter_sys.hpp"
+#include <functional_dag/fn_dag_interface.hpp>
+#include "functional_dag/filter_sys.hpp"
 
 #include <chrono>
 #include <thread>

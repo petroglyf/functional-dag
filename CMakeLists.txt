@@ -35,7 +35,8 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 ########################################
 ####### Building specification #########
 ########################################
-add_library(functional_dag SHARED src/filter_sys/dag_manager.cpp src/filter_sys/libutils.cpp)
+add_library(functional_dag SHARED src/functional_dag/dag_manager.cpp 
+                                  src/functional_dag/libutils.cpp)
 target_include_directories(functional_dag PRIVATE "include/" ${JSONCPP_INCLUDE_DIRS})
 target_link_directories(functional_dag PRIVATE ${JSONCPP_LIBRARY_DIRS})
 target_link_libraries(functional_dag PRIVATE ${JSONCPP_LIBRARIES})
@@ -44,7 +45,8 @@ target_link_libraries(functional_dag PRIVATE ${JSONCPP_LIBRARIES})
 ####### Build the testing files ########
 ########################################
 if (DEFINED Catch2_DIR)
-  add_executable(tests test/filter_sys/dag_tests.cpp test/filter_sys/lib_tests.cpp)
+  add_executable(tests test/functional_dag/dag_tests.cpp 
+                       test/functional_dag/lib_tests.cpp)
   target_include_directories(tests PRIVATE "include/" ${CATCH_INCLUDE_DIR})
   target_link_directories(tests PRIVATE ${CATCH_LIBRARY_DIRS} ${JSONCPP_LIBRARY_DIRS})
   target_link_libraries(tests functional_dag Catch2::Catch2WithMain ${JSONCPP_LIBRARIES})
@@ -58,17 +60,17 @@ endif()
 ####### Install specification ##########
 ########################################
 target_sources(functional_dag INTERFACE 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/dag_interface.hpp>
-    $<INSTALL_INTERFACE:include/filter_sys/dag_interface.hpp>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dag_interface.hpp>
+    $<INSTALL_INTERFACE:include/functional_dag/dag_interface.hpp>
 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/lib_utils.h>
-    $<INSTALL_INTERFACE:include/filter_sys/lib_utils.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/lib_utils.h>
+    $<INSTALL_INTERFACE:include/functional_dag/lib_utils.h>
     
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/dlpack.h>
-    $<INSTALL_INTERFACE:include/filter_sys/dlpack.h>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dlpack.h>
+    $<INSTALL_INTERFACE:include/functional_dag/dlpack.h>
     
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/filter_sys/dag_utils.hpp>
-    $<INSTALL_INTERFACE:include/filter_sys/dag_utils.hpp>)
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dag_utils.hpp>
+    $<INSTALL_INTERFACE:include/functional_dag/dag_utils.hpp>)
 
 get_target_property(FN_DAG_PUBLIC_HEADERS functional_dag INTERFACE_SOURCES)
 set_target_properties(functional_dag PROPERTIES PUBLIC_HEADER "${FN_DAG_PUBLIC_HEADERS}")
