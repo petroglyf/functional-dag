@@ -50,12 +50,12 @@ bool preflight_lib(const fs::path _lib_path) {
   
   dlclose(lib_handle);
 
-  std::cout << "guid: " << has_guid << std::endl;
-  std::cout << "name: " << has_name << std::endl;
-  std::cout << "opts: " << has_options << std::endl;
-  std::cout << "has source: " << has_source_id << std::endl;
-  std::cout << "desc: " << has_description << std::endl;
-  std::cout << "module: " << has_module << std::endl;
+  // std::cout << "guid: " << has_guid << std::endl;
+  // std::cout << "name: " << has_name << std::endl;
+  // std::cout << "opts: " << has_options << std::endl;
+  // std::cout << "has source: " << has_source_id << std::endl;
+  // std::cout << "desc: " << has_description << std::endl;
+  // std::cout << "module: " << has_module << std::endl;
   return has_guid && has_name && has_description && has_module && has_options && has_source_id;
 }
 
