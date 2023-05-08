@@ -11,9 +11,6 @@
 #include <functional_dag/lib_utils.h>
 #include "json/json.h"
 
-
-static const fs::directory_entry library_path("./lib");
-
 #ifdef __APPLE__
 static const string dylib_suffix("dylib");
 #elif __linux__
@@ -22,7 +19,7 @@ static const string dylib_suffix("so");
 
 using namespace std;
 
-shared_ptr< vector<fs::directory_entry> > get_all_available_libs() {
+shared_ptr< vector<fs::directory_entry> > get_all_available_libs(const fs::directory_entry &library_path) {
   shared_ptr< vector<fs::directory_entry> > all_files(new vector<fs::directory_entry>());
 
   if(library_path.exists()) {
@@ -182,9 +179,7 @@ static fn_dag::lib_options __generate_options(Json::Value spec_in, const std::un
 }
 
 static std::shared_ptr<fn_dag::module> __instantiate_from_library(Json::Value node, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
-  std::cout << "JSON: " << node << std::endl;
   long s_guid = __get_guid(node);
-  std::cout << " Guid: " << s_guid << std::endl;
   if(s_guid != 0) {
     fn_dag::instantiate_fn spec_creator = nullptr;
     if(library.contains(s_guid))
@@ -230,13 +225,10 @@ fn_dag::dag_manager<std::string> *fsys_deserialize(const std::string &json_in, c
     
     if(!parent_value.isNull() && parent_value.isString()) {
       std::string parent_name = parent_value.asString();
-      std::cout <<" INSTA " << name << " WITH PAR " << parent_name << std::endl;
+
       if(manager->manager_contains_id(parent_name)) {
-        std::cout <<" manager contains id, instantiating\n";
         std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(nodes[name], library);
-        std::cout << "got lib handle\n";
         if(lib_handle != nullptr) {
-          std::cout << "lib handle not null\n";
           manager->add_node(name, lib_handle->get_handle_as_mapping(), parent_name);
         }
           

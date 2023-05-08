@@ -34,13 +34,9 @@ namespace fn_dag {
     //implementation to template funcs must be visible to link correctly
     template <typename In, typename Out> 
     void add_node(IDType _id, dag_node<In,Out> *newFilter, IDType _onto) {
-      std::cout << "Adding node2\n";
       if(newFilter != nullptr) {
-        std::cout << "node not null\n";
         for(auto t = m_allTrees.cbegin();t != m_allTrees.cend();t++) {
-          std::cout << "is below? " << (*t)->get_id() << " onto " << _onto << std::endl;
           if((*t)->dag_contains(_onto) || (*t)->get_id() == _onto) {
-            std::cout << "found\n";
             dag<In, IDType> *tptr = static_cast<dag<In, IDType>*>(*t);
             tptr->addFilter(_id, newFilter, _onto);
           }
