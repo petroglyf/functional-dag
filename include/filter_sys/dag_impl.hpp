@@ -1,13 +1,10 @@
 /**
- *           _________ _       
- *  |\     /|\__   __/( (    /|
- *  | )   ( |   ) (   |  \  ( |
- *  ( (   ) )   | |   | (\ \) |
- *   \ \_/ /    | |   | | \   |
- *    \   /  ___) (___| )  \  |
- *     \_/   \_______/|/    )_)
- *                             
- * 
+ *   ___                 .___               
+ *  |_  \              __| _/____     ____  
+ *   /   \    ______  / __ |\__  \   / ___\ 
+ *  / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+ * /_/  \__\         \____ |(____  /\___  / 
+ *                        \/     \//_____/   
  * 
  * @author: ndepalma@alum.mit.edu
  * @license: MIT License
@@ -18,8 +15,8 @@
 #include <map>
 #include <iostream>
 #include <unordered_set>
-#include "filter_sys/dag_interface.hpp"
-#include "filter_sys/dag_fanout_impl.hpp"
+#include "functional_dag/dag_interface.hpp"
+#include "functional_dag/dag_fanout_impl.hpp"
 
 /**************************************************
  * Trees work like this: 
@@ -95,14 +92,12 @@ namespace fn_dag {
 
     void push_once() {
       if(!fn_dag::__g_run_single_threaded) {
-        // std::cout << "not single threaded\n";
         // std::packaged_task<void()> task(std::bind(&dag<OriginType,IDType>::__push_once, this));
         // // std::future<int> f1 = task.get_future();  // get a future
         // std::thread tmp_thread(std::thread(std::move(task)));
         // m_thread.swap(tmp_thread); // launch on a thread
         __push_once();
       } else {
-        std::cout << "single threaded\n";
         __push_once();
       }
       

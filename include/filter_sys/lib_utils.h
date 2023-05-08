@@ -1,11 +1,10 @@
 /**
- *           _________ _       
- *  |\     /|\__   __/( (    /|
- *  | )   ( |   ) (   |  \  ( |
- *  ( (   ) )   | |   | (\ \) |
- *   \ \_/ /    | |   | | \   |
- *    \   /  ___) (___| )  \  |
- *     \_/   \_______/|/    )_)
+ *   ___                 .___               
+ *  |_  \              __| _/____     ____  
+ *   /   \    ______  / __ |\__  \   / ___\ 
+ *  / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+ * /_/  \__\         \____ |(____  /\___  / 
+ *                        \/     \//_____/   
  *                             
  * If a user decides to implement the functionals themselves, then they can use these interfaces.
  * 
@@ -17,9 +16,9 @@
 #include <vector>
 #include <filesystem>
 #include <unordered_map>
-#include <filter_sys/dag_interface.hpp>
-#include <filter_sys/filter_sys.hpp>
-#include <filter_sys/dlpack.h>
+#include <functional_dag/dag_interface.hpp>
+#include <functional_dag/filter_sys.hpp>
+#include <functional_dag/dlpack.h>
 
 using namespace std;
 namespace fs = std::filesystem;

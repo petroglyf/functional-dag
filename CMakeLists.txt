@@ -38,7 +38,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 add_library(functional_dag SHARED src/filter_sys/dag_manager.cpp src/filter_sys/libutils.cpp)
 target_include_directories(functional_dag PRIVATE "include/" ${JSONCPP_INCLUDE_DIRS})
 target_link_directories(functional_dag PRIVATE ${JSONCPP_LIBRARY_DIRS})
-target_link_libraries(functional_dag ${JSONCPP_LIBRARIES})
+target_link_libraries(functional_dag PRIVATE ${JSONCPP_LIBRARIES})
 
 ########################################
 ####### Build the testing files ########
@@ -81,6 +81,6 @@ install(TARGETS functional_dag
     PUBLIC_HEADER DESTINATION include/functional_dag)
 
 install(EXPORT dag_install
-    FILE FunctionalDagConfig.cmake
+    FILE functional_dagConfig.cmake
     NAMESPACE FunctionalDag::
     DESTINATION lib/cmake/functional_dag)

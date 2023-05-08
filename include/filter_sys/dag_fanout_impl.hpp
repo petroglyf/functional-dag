@@ -1,13 +1,10 @@
 /**
-  *           _________ _       
- *  |\     /|\__   __/( (    /|
- *  | )   ( |   ) (   |  \  ( |
- *  ( (   ) )   | |   | (\ \) |
- *   \ \_/ /    | |   | | \   |
- *    \   /  ___) (___| )  \  |
- *     \_/   \_______/|/    )_)
- *                             
- * 
+ *   ___                 .___               
+ *  |_  \              __| _/____     ____  
+ *   /   \    ______  / __ |\__  \   / ___\ 
+ *  / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+ * /_/  \__\         \____ |(____  /\___  / 
+ *                        \/     \//_____/   
  * 
  * @author: ndepalma@alum.mit.edu
  * @license: MIT License
@@ -19,8 +16,8 @@
 #include <iostream>
 #include <future>
 #include <thread>
-#include <filter_sys/dag_node_impl.hpp>
-#include <filter_sys/dag_utils.hpp>
+#include <functional_dag/dag_node_impl.hpp>
+#include <functional_dag/dag_utils.hpp>
 
 namespace fn_dag {
   template <typename Type, typename IDType>
@@ -38,7 +35,6 @@ namespace fn_dag {
     void spread_around(Type *_data) {
       // std::cout << " spreading around\n";
       for(auto it : m_children) {
-        std::cout << "Running child filter\n";
         it->runFilter(_data);
       }
     }

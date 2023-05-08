@@ -1,11 +1,10 @@
 /**
- *           _________ _       
- *  |\     /|\__   __/( (    /|
- *  | )   ( |   ) (   |  \  ( |
- *  ( (   ) )   | |   | (\ \) |
- *   \ \_/ /    | |   | | \   |
- *    \   /  ___) (___| )  \  |
- *     \_/   \_______/|/    )_)
+ *   ___                 .___               
+ *  |_  \              __| _/____     ____  
+ *   /   \    ______  / __ |\__  \   / ___\ 
+ *  / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+ * /_/  \__\         \____ |(____  /\___  / 
+ *                        \/     \//_____/   
  *                             
  * If a user decides to implement the functionals themselves, then they can use these interfaces.
  * 
@@ -14,8 +13,8 @@
  */ 
 #pragma once
 
-#include <filter_sys/dag_interface.hpp>
-#include <filter_sys/dag_fanout_impl.hpp>
+#include <functional_dag/dag_interface.hpp>
+#include <functional_dag/dag_fanout_impl.hpp>
 
 #include <string>
 #include <mutex>
@@ -76,7 +75,6 @@ namespace fn_dag {
       //   m_thread.swap(tmp_thread); // launch on a thread
       //   // tmp_thread.join();
       // } else {
-      std::cout << "run once!!\n";
         runOnce();
       // }
     }
