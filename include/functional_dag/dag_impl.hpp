@@ -18,19 +18,7 @@
 #include "functional_dag/dag_interface.hpp"
 #include "functional_dag/dag_fanout_impl.hpp"
 
-/**************************************************
- * Trees work like this: 
- *
- *  _dag_base
- *  |-Tree
- *  |--SpreadAroundTreeNode -> single data handle here
- *  |---*dag_node -> Filter, data not locked, thread waiting here
- *  |-----SpreadAroundTreeNode
- *  |------*dag_node -> Filter
- */
 namespace fn_dag {
-  extern bool __g_filter_off;
-  extern bool __g_run_single_threaded;
 
   template<typename IDType>
   class _dag_base {
@@ -44,18 +32,25 @@ namespace fn_dag {
 
   template<typename OriginType, typename IDType>
   class dag : public _dag_base<IDType> {
-  public:
+  private:
     const IDType m_id;
     dag_source<OriginType> *m_source;
     
     dag_fanout_node<OriginType, IDType> m_children;
     unordered_set<IDType> m_children_ids;
-    
-    dag(IDType _id, dag_source<OriginType> *_lsource, bool _startThread) :
-          m_children_ids(), m_source(_lsource), m_id(_id), m_children() {
-      if(_startThread) {
+    const _dag_context &g_context;
+  public:
+    dag(IDType _id, 
+        dag_source<OriginType> *_lsource, 
+        const _dag_context &_context, 
+        bool _startThread) :
+                  m_children_ids(), 
+                  m_source(_lsource), 
+                  m_id(_id), 
+                  m_children(_context), 
+                  g_context(_context) {
+      if(_startThread)
         startSource();
-      }	      
     }
 
     ~dag() {
@@ -80,18 +75,18 @@ namespace fn_dag {
     template<typename In, typename Out> 
     void addFilter(IDType _newID, dag_node<In, Out> *newFilter, IDType onNode) {
       _internal_dag_node<In, Out, IDType> *new_node;
-      new_node = new _internal_dag_node<In, Out, IDType>(_newID, newFilter);
+      new_node = new _internal_dag_node<In, Out, IDType>(_newID, newFilter, g_context);
       m_children_ids.insert(_newID);
       findAndAdd(new_node, onNode, this->get_id(), &m_children);
     }
 
     void print() {
-      std::cout << "->" << this->m_id << std::endl;
-      m_children.print("  ");
+      *g_context.log << "->" << this->m_id << std::endl;
+      m_children.print(g_context.indent_str);
     }
 
     void push_once() {
-      if(!fn_dag::__g_run_single_threaded) {
+      if(!g_context.filter_off) {
         // std::packaged_task<void()> task(std::bind(&dag<OriginType,IDType>::__push_once, this));
         // // std::future<int> f1 = task.get_future();  // get a future
         // std::thread tmp_thread(std::thread(std::move(task)));
@@ -107,18 +102,14 @@ namespace fn_dag {
     thread m_thread;
     void __push_once() {
       OriginType *dat = m_source->update();
-      if(dat != nullptr) {
-        // std::cout << "dat not null\n";
-        m_children.spread_around(dat);
-      }
+      if(dat != nullptr)
+        m_children.fan_out(dat);
     }
 
     
     void startsrc() {
-      std::cout<< " startsrc\n";
-      while(!__g_filter_off) {
+      while(!g_context.filter_off)
 	      push_once();
-      }
     }
     
     void startSource() {
@@ -128,15 +119,16 @@ namespace fn_dag {
     template <typename In, typename Out, typename CurrOut>
     bool findAndAdd(_internal_dag_node<In,Out,IDType> *addNode, const IDType onto, const IDType _parent_id, dag_fanout_node<CurrOut, IDType> *conn) {
       if(onto == _parent_id) {
-        conn->m_children.push_back((_abstract_internal_dag_node<In, IDType>*)addNode);
+        conn->add_node((_abstract_internal_dag_node<In, IDType>*)addNode);
         return true;
-      } else 
-      for(auto child = conn->m_children.cbegin();child != conn->m_children.cend();child++) {
-        _internal_dag_node<In, CurrOut, IDType> *tn;
-        tn = static_cast<_internal_dag_node<In, CurrOut, IDType> *>(*child);
-        fn_dag::dag_fanout_node<CurrOut, IDType> *satn = tn->m_child;
-        if(findAndAdd(addNode, onto, (*child)->get_id(), satn))
-          return true;
+      } else {
+        for(auto child = conn->m_children.cbegin();child != conn->m_children.cend();child++) {
+          _internal_dag_node<In, CurrOut, IDType> *tn;
+          tn = static_cast<_internal_dag_node<In, CurrOut, IDType> *>(*child);
+          fn_dag::dag_fanout_node<CurrOut, IDType> *satn = tn->m_child;
+          if(findAndAdd(addNode, onto, (*child)->get_id(), satn))
+            return true;
+        }
       }
       return false;  
     }

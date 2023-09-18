@@ -5,6 +5,7 @@
 #include <chrono>
 #include <thread>
 #include <random>
+#include <sstream>
 
 TEST_CASE( "Fill an array in order", "[dag.single_thread]" ) {
   int array[] = {0,0,0,0,0};
@@ -13,7 +14,7 @@ TEST_CASE( "Fill an array in order", "[dag.single_thread]" ) {
   int *end = &(array[4]);
 
   fn_dag::dag_manager<uint64_t> manager;
-  fn_dag::__g_run_single_threaded = true;
+  manager.run_single_threaded(true);
   
 
   for(uint64_t i = 0;i < 5;i++) {
@@ -154,5 +155,32 @@ TEST_CASE( "Simple accumulate", "[dag.accumulate]" ) {
   REQUIRE( final_value == 10 );
 }
 
-// TEST_CASE( "Print the tree and check results", "[dag.print]" ) {
-// }
+TEST_CASE( "Print the tree and check results", "[dag.print]" ) {
+  fn_dag::dag_manager<int> manager;
+
+  std::function<int *()> fn = []() {
+    int *pass_int = new int;
+    *pass_int = 1;
+    return pass_int;
+  };
+  
+  manager.add_dag(0, fn_dag::fn_source(fn), false);
+
+  for(int i = 0;i < 9;i++) {
+    std::function<int *(const int *)> fn_c = [i](const int *int_in) {
+      int *pass_int = new int;
+      *pass_int = *int_in + 1;        
+      return pass_int;
+    };
+
+    manager.add_node(i+1, fn_dag::fn_call(fn_c), i);
+  }
+  std::stringstream output_stream;
+  manager.set_logging_stream(&output_stream);
+  manager.printAllTrees();
+  std::string final_string = output_stream.str();
+  auto num_newlines = std::ranges::count(final_string, '\n');
+  
+  // 10 nodes, 2 header+footer, 1 extra 
+  REQUIRE( num_newlines == 10+2+1 );
+}

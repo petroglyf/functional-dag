@@ -21,10 +21,12 @@ namespace fn_dag {
 
   template <typename IDType> 
   class dag_manager {
-    public: 
+  private:
+    _dag_context m_context;
+  public: 
     dag_manager() {
-      fn_dag::__g_filter_off = false;
-      fn_dag::__g_run_single_threaded = false;
+      m_context.filter_off = false;
+      m_context.run_single_threaded = false;
     }
     ~dag_manager() {
       clearAllTrees();
@@ -46,18 +48,29 @@ namespace fn_dag {
  
     bool manager_contains_id(IDType _parent_id) {
       for(auto t = m_allTrees.cbegin();t != m_allTrees.cend();t++) {
-        std::cout << "t id? " << (*t)->get_id() << std::endl;
         if((*t)->dag_contains(_parent_id) || (*t)->get_id() == _parent_id)
           return true;
       }
       return false;
+    }
+
+    void set_indention_string(string _new_indent_str) {
+      m_context.indent_str = _new_indent_str;
+    }
+
+    void set_logging_stream(std::ostream *_new_stream) {
+      m_context.log = _new_stream;
+    }
+
+    void run_single_threaded(bool _is_single_threaded) {
+      m_context.run_single_threaded = _is_single_threaded;
     }
     
 
     template <typename Out> 
     dag<Out, IDType> *add_dag(IDType _id, dag_source<Out> *_new_filter, bool _startImmediately) {
       if(_new_filter != nullptr) {
-        dag<Out, IDType> *t = new dag<Out, IDType>(_id, _new_filter, _startImmediately);
+        dag<Out, IDType> *t = new dag<Out, IDType>(_id, _new_filter, m_context, _startImmediately);
         m_allTrees.push_back(t);
         return t;
       }
@@ -65,15 +78,15 @@ namespace fn_dag {
     }
 
   void printAllTrees() {
-      std::cout << std::endl;
-      std::cout << "-----------Filter Tree-----------\n";
+      *m_context.log << std::endl;
+      *m_context.log << "-----------Filter Tree-----------\n";
       for(auto t = m_allTrees.cbegin();t != m_allTrees.cend();t++)
         (*t)->print();  
-      std::cout << "---------------------------------\n";
+      *m_context.log << "---------------------------------\n";
     }
     
     void Stahp() {
-      fn_dag::__g_filter_off = true;
+      m_context.filter_off = true;
     }
     
     void clearAllTrees() {
