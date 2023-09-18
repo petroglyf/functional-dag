@@ -102,11 +102,11 @@ namespace fn_dag {
 }
 
 
-string fsys_serialize(const vector<fn_dag::library_spec> * const _tree) {
+string fsys_serialize(const vector<fn_dag::library_spec> * const _dag) {
   Json::Value sources;
   Json::Value nodes;
   Json::Value root;
-  for(const auto &item : *_tree) {
+  for(const auto &item : *_dag) {
     Json::Value spec;
     spec["guid"] = item.lib_guid;
     bool is_src = item.is_source;

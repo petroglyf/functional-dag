@@ -34,22 +34,21 @@ namespace fn_dag {
   public:
     virtual ~_abstract_internal_dag_node() = default;
     virtual IDType get_id() = 0;
-    virtual void runFilter(const Type *_data) = 0;
+    virtual void run_filter(const Type *_data) = 0;
     virtual void print(string _plus) = 0;
   };
 
   template<typename In, typename Out, typename IDType>
   class _internal_dag_node : public _abstract_internal_dag_node<In, IDType> {
-  protected:
+    friend class dag_fanout_node<In, IDType>;
+    
+  private:
     dag_node<In,Out> *m_node_hook;
     const IDType m_node_id;
-private:
-  
+    dag_fanout_node<Out, IDType> *m_child;
     const fn_dag::_dag_context &g_context;
     
   public:
-    dag_fanout_node<Out, IDType> *m_child; // TODO: Make this private
-
     _internal_dag_node(IDType _node_id, dag_node<In,Out> *_node, const fn_dag::_dag_context &_context) :
       m_node_id(_node_id),
       m_node_hook(_node),
@@ -61,7 +60,7 @@ private:
       delete m_node_hook;
     }
 
-    void runFilter(const In *_data) {
+    void run_filter(const In *_data) {
       Out *data_out = m_node_hook->update(_data);
       if(!g_context.filter_off && data_out != nullptr)
         m_child->fan_out(data_out);

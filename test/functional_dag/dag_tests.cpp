@@ -29,7 +29,7 @@ TEST_CASE( "Fill an array in order", "[dag.single_thread]" ) {
     manager.add_dag(i, fn_dag::fn_source(fn), false);
   }
 
-  for(auto dag : manager.m_allTrees) {
+  for(auto dag : manager.m_all_dags) {
     dag->push_once();
   }
 
@@ -63,12 +63,12 @@ TEST_CASE( "Fill an array out of order", "[dag.multithread]" ) {
     manager.add_dag(i, fn_dag::fn_source(fn), false);
   }
 
-  manager.printAllTrees();
-  for(auto dag : manager.m_allTrees)
+  manager.print_all_dags();
+  for(auto dag : manager.m_all_dags)
     dag->push_once();
   
   std::this_thread::sleep_for(std::chrono::milliseconds(4000));
-  manager.Stahp();
+  manager.stahp();
 
   REQUIRE( array_out[0] == 1 );
   REQUIRE( array_out[1] == 2 );
@@ -106,12 +106,12 @@ TEST_CASE( "Use a fanout, check all 5 received", "[dag.fanout]" ) {
       
     manager.add_node(i+1, fn_dag::fn_call(fn_c), 0);
   }
-  manager.printAllTrees();
-  for(auto dag : manager.m_allTrees) {
+  manager.print_all_dags();
+  for(auto dag : manager.m_all_dags) {
     dag->push_once();
   }
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  manager.Stahp();
+  manager.stahp();
 
   REQUIRE( array[0] == rand_int );
   REQUIRE( array[1] == rand_int );
@@ -147,17 +147,17 @@ TEST_CASE( "Simple accumulate", "[dag.accumulate]" ) {
     return nullptr;
   };
   manager.add_node(10, fn_dag::fn_call(fn_last), 9);
-  manager.printAllTrees();
-  for(auto dag : manager.m_allTrees)
+  manager.print_all_dags();
+  for(auto dag : manager.m_all_dags)
     dag->push_once();
   
   std::this_thread::sleep_for(std::chrono::milliseconds(1000));
-  manager.Stahp();
+  manager.stahp();
 
   REQUIRE( final_value == 10 );
 }
 
-TEST_CASE( "Print the tree and check results", "[dag.print]" ) {
+TEST_CASE( "Print the dag and check results", "[dag.print]" ) {
   fn_dag::dag_manager<int> manager;
 
   std::function<int *()> fn = []() {
@@ -179,7 +179,7 @@ TEST_CASE( "Print the tree and check results", "[dag.print]" ) {
   }
   std::stringstream output_stream;
   manager.set_logging_stream(&output_stream);
-  manager.printAllTrees();
+  manager.print_all_dags();
   std::string final_string = output_stream.str();
   auto num_newlines = std::ranges::count(final_string, '\n');
   

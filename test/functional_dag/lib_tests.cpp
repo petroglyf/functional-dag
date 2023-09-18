@@ -22,7 +22,7 @@ class node_mock : fn_dag::module_transmit {
 
 TEST_CASE( "Serializes JSON", "[libs.json_serialize]" ) {
   // Create a fake library and add it to the libs 
-  std::vector<fn_dag::library_spec> tree;
+  std::vector<fn_dag::library_spec> dag;
   fn_dag::library_spec lib1;
   lib1.name = "test lib";
   lib1.lib_guid = 8179941;
@@ -51,10 +51,10 @@ TEST_CASE( "Serializes JSON", "[libs.json_serialize]" ) {
   lib2.is_source = false;
 
   // // insert it to the graph
-  tree.push_back(lib1);
-  tree.push_back(lib2);
+  dag.push_back(lib1);
+  dag.push_back(lib2);
   // serialize out
-  std::string json_out = fsys_serialize(&tree);
+  std::string json_out = fsys_serialize(&dag);
   std::cout << "json_out:\n" << json_out << std::endl;
 
   REQUIRE( expected_json == json_out );
