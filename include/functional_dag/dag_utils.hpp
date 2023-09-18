@@ -12,12 +12,16 @@
  * @license: MIT License
  */ 
 #pragma once
+#include <iostream>
 #include <string>
 
 using namespace std;
 
 namespace fn_dag {
-  extern string __g_indent_str;
-
-  void set_indention_string(string _new_indent_str);
+  struct _dag_context {
+    bool filter_off = false;
+    bool run_single_threaded = false;
+    string indent_str = "  ";
+    ostream *log = &cout;
+  };
 };

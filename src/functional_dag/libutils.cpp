@@ -214,7 +214,7 @@ static std::shared_ptr<fn_dag::module> __instantiate_from_library(Json::Value no
 
 fn_dag::dag_manager<std::string> *fsys_deserialize(const std::string &json_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
   fn_dag::dag_manager<std::string> *manager = new fn_dag::dag_manager<std::string>();
-  fn_dag::__g_run_single_threaded = true;
+  manager->run_single_threaded(true);
   int num_nodes_created = 0;
   Json::Reader string_reader;
   Json::Value root;
