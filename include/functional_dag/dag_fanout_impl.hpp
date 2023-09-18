@@ -27,7 +27,7 @@ namespace fn_dag {
   template <typename Type, typename IDType>
   class dag_fanout_node {
   private:
-    
+
     const fn_dag::_dag_context &g_context;
   public:
     vector< _abstract_internal_dag_node<Type, IDType> *> m_children; //TODO: Make this private
@@ -36,14 +36,28 @@ namespace fn_dag {
                                               g_context(context_), 
                                               m_children() {}
     ~dag_fanout_node() {
+
       for(auto internal_dag : m_children)
         delete internal_dag;
       m_children.clear();
     }
     
     void fan_out(Type *_data) {
-      for(auto it : m_children)
-        it->runFilter(_data);
+
+      if(!g_context.run_single_threaded) {
+        std::vector<thread> child_threads;
+
+        for(auto it : m_children)
+          child_threads.push_back(thread(&fn_dag::_abstract_internal_dag_node<Type, IDType>::runFilter, it, std::ref(_data)));
+
+        for(int i = 0;i < child_threads.size();i++)
+          child_threads[i].join();
+      } else
+        for(auto it : m_children)
+          it->runFilter(_data);
+
+      delete _data;
+        
     }
 
     void print(string _indent) {
