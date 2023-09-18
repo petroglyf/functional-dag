@@ -37,8 +37,9 @@ namespace fn_dag {
     virtual ~module() = default;
 
     virtual MODULE_TYPE get_type();
-    virtual module_source *get_handle_as_source();
-    virtual module_transmit *get_handle_as_mapping();
+    virtual std::vector<std::string> const get_available_slots();
+    virtual module_source *get_slot_handle_as_source(const std::string &_slot_name);
+    virtual module_transmit *get_slot_handle_as_mapping(const std::string &_slot_name);
   };
 
   class source_handler : public module {
@@ -47,7 +48,7 @@ namespace fn_dag {
     ~source_handler();
 
     MODULE_TYPE get_type();
-    module_source *get_handle_as_source();
+    module_source *get_slot_handle_as_source(const std::string &_slot_name);
   private:
     module_source *handler;
   };
@@ -58,7 +59,7 @@ namespace fn_dag {
     ~module_handler();
 
     MODULE_TYPE get_type();
-    module_transmit *get_handle_as_mapping();
+    module_transmit *get_slot_handle_as_mapping(const std::string &_slot_name);
   private:
     module_transmit *handler;
   };

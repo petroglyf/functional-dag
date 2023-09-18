@@ -66,11 +66,15 @@ namespace fn_dag {
     return MODULE_TYPE::UNDEFINED;
   }
 
-  module_source *module::get_handle_as_source() {
+  std::vector<std::string> const module::get_available_slots() {
+    return std::vector<std::string>();
+  }
+
+  module_source *module::get_slot_handle_as_source(const std::string &_slot_name) {
     return nullptr;
   }
 
-  module_transmit *module::get_handle_as_mapping() {
+  module_transmit *module::get_slot_handle_as_mapping(const std::string &_slot_name) {
     return nullptr;
   }
 
@@ -81,7 +85,7 @@ namespace fn_dag {
     return MODULE_TYPE::SOURCE;
   }
 
-  module_source *source_handler::get_handle_as_source() {
+  module_source *source_handler::get_slot_handle_as_source(const std::string &_slot_name) {
     return handler;
   }
 
@@ -92,7 +96,7 @@ namespace fn_dag {
     return MODULE_TYPE::FILTER;
   }
 
-  module_transmit *module_handler::get_handle_as_mapping() {
+  module_transmit *module_handler::get_slot_handle_as_mapping(const std::string &_slot_name) {
     return handler;
   }
 }
@@ -145,6 +149,13 @@ static uint32_t __get_guid(Json::Value guid_node) {
   if(!guid.isNull() && guid.isUInt())
     return guid.asUInt();
   return 0;
+}
+
+static const std::string __get_slot_name(Json::Value slot_node) {
+  Json::Value slot_name = slot_node["slot"];
+  if(!slot_name.isNull() && slot_name.isString())
+    return slot_name.asString();
+  return "";
 }
 
 static fn_dag::lib_options __generate_options(Json::Value spec_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
@@ -216,26 +227,32 @@ fn_dag::dag_manager<std::string> *fsys_deserialize(const std::string &json_in, c
 
   for(std::string name : sources.getMemberNames()) {
     std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(sources[name], library);
-    if(lib_handle != nullptr)
-      manager->add_dag(name, lib_handle->get_handle_as_source(), true);
+    const std::string slot_name = __get_slot_name(sources[name]);
+    if(lib_handle != nullptr && slot_name != "")
+      manager->add_dag(name, lib_handle->get_slot_handle_as_source(slot_name), true);
   }
 
   for(std::string name : nodes.getMemberNames()) {
-    Json::Value parent_value = nodes[name]["parent"];
-    
-    if(!parent_value.isNull() && parent_value.isString()) {
-      std::string parent_name = parent_value.asString();
+    if(nodes[name].isArray())
+      for( Json::Value slot_target : nodes[name]) {
+        Json::Value parent_value = nodes[name]["parent"];
+        Json::Value input_slot_name = nodes[name]["slot"];
+        
+        if(!parent_value.isNull() && parent_value.isString() && input_slot_name.isString()) {
+          std::string parent_name = parent_value.asString();
+          std::string input_slot = input_slot_name.asString();
 
-      if(manager->manager_contains_id(parent_name)) {
-        std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(nodes[name], library);
-        if(lib_handle != nullptr) {
-          manager->add_node(name, lib_handle->get_handle_as_mapping(), parent_name);
+          if(manager->manager_contains_id(parent_name)) {
+            std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(nodes[name], library);
+            if(lib_handle != nullptr) {
+              manager->add_node(name, lib_handle->get_slot_handle_as_mapping(input_slot), parent_name);
+            }
+              
+          } else {
+            std::cerr << "no parent available for id " << name << std::endl;
+          }
         }
-          
-      } else {
-        std::cerr << "no parent available for id " << name << std::endl;
       }
-    }
   }
 
   return manager;
