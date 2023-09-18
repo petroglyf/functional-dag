@@ -94,6 +94,6 @@ TEST_CASE( "Load JSON", "[libs.json_deserialize]" ) {
 
   // deserialize out
   auto manager = fsys_deserialize(expected_json, library);
-
+  delete manager;
   REQUIRE( !did_instantiate );
 }

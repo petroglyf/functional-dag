@@ -21,7 +21,9 @@ TEST_CASE( "Fill an array in order", "[dag.single_thread]" ) {
     std::function<int *()> fn = [&array, i, &ran_times]() {
       *(array+i) = i+1;
       ran_times++;
-      return array+i+1;
+      int *int_out = new int;
+      *int_out = *(array+i);
+      return int_out;
     };
     
     manager.add_dag(i, fn_dag::fn_source(fn), false);

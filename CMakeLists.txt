@@ -35,8 +35,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
 ########################################
 ####### Building specification #########
 ########################################
-add_library(functional_dag SHARED src/functional_dag/dag_manager.cpp 
-                                  src/functional_dag/libutils.cpp)
+add_library(functional_dag SHARED src/functional_dag/libutils.cpp)
 target_include_directories(functional_dag PRIVATE "include/" ${JSONCPP_INCLUDE_DIRS})
 target_link_directories(functional_dag PRIVATE ${JSONCPP_LIBRARY_DIRS})
 target_link_libraries(functional_dag PRIVATE ${JSONCPP_LIBRARIES})
