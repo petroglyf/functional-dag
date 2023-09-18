@@ -15,8 +15,9 @@
 #include <map>
 #include <iostream>
 #include <unordered_set>
+
 #include "functional_dag/dag_interface.hpp"
-#include "functional_dag/dag_fanout_impl.hpp"
+#include "functional_dag/impl/dag_fanout_impl.hpp"
 
 namespace fn_dag {
 

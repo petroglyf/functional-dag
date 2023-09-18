@@ -14,6 +14,7 @@
 #pragma once
 
 #include<functional>
+
 #include<functional_dag/dag_interface.hpp>
 
 namespace fn_dag {

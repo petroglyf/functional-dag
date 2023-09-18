@@ -13,16 +13,15 @@
  */ 
 #pragma once
 
-#include <functional_dag/dag_interface.hpp>
-#include <functional_dag/dag_fanout_impl.hpp>
-#include <functional_dag/dag_utils.hpp>
-
 #include <string>
 #include <mutex>
 #include <thread>
 #include <iostream>
 #include <condition_variable>
 
+#include "functional_dag/dag_interface.hpp"
+#include "functional_dag/impl/dag_fanout_impl.hpp"
+#include "functional_dag/core/dag_utils.hpp"
 
 namespace fn_dag {
   using namespace std;

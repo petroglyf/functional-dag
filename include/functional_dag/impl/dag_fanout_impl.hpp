@@ -16,8 +16,9 @@
 #include <iostream>
 #include <future>
 #include <thread>
-#include <functional_dag/dag_node_impl.hpp>
-#include <functional_dag/dag_utils.hpp>
+
+#include <functional_dag/impl/dag_node_impl.hpp>
+#include <functional_dag/core/dag_utils.hpp>
 
 namespace fn_dag {
 
