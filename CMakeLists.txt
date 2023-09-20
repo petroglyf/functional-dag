@@ -66,22 +66,22 @@ target_sources(functional_dag INTERFACE
     $<INSTALL_INTERFACE:include/functional_dag/lib_utils.h>
     
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_impl.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/dag_impl.hpp>
+    $<INSTALL_INTERFACE:include/functional_dag/impl/dag_impl.hpp>
 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/filter_sys.hpp>
     $<INSTALL_INTERFACE:include/functional_dag/filter_sys.hpp>
 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_fanout_impl.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/dag_fanout_impl.hpp>
+    $<INSTALL_INTERFACE:include/functional_dag/impl/dag_fanout_impl.hpp>
 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_node_impl.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/dag_node_impl.hpp>
+    $<INSTALL_INTERFACE:include/functional_dag/impl/dag_node_impl.hpp>
 
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dlpack.h>
     $<INSTALL_INTERFACE:include/functional_dag/dlpack.h>
     
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/core/dag_utils.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/dag_utils.hpp>)
+    $<INSTALL_INTERFACE:include/functional_dag/core/dag_utils.hpp>)
 
 get_target_property(FN_DAG_PUBLIC_HEADERS functional_dag INTERFACE_SOURCES)
 set_target_properties(functional_dag PROPERTIES PUBLIC_HEADER "${FN_DAG_PUBLIC_HEADERS}")
