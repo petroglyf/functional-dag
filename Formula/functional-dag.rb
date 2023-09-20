@@ -4,7 +4,7 @@ class FunctionalDag < Formula
   desc "A library for building functional dags"
   homepage "https://github.com/petrogly-ph/functional-dag"
   url "https://github.com/petrogly-ph/functional-dag/archive/refs/tags/brew.tar.gz"
-  sha256 "d649bbc13cbb81fca2d686a17be9609357f702212ed201076010425ed72e62b2"
+  sha256 "6f19bce91912b14324aa469855f8516bce9e797b014ce0a7ada3f79a2ca90627"
   license "MIT"
   version "0.5"
 

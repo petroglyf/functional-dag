@@ -58,40 +58,58 @@ endif()
 ########################################
 ####### Install specification ##########
 ########################################
-target_sources(functional_dag INTERFACE 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dag_interface.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/dag_interface.hpp>
+# target_sources(functional_dag INTERFACE 
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dag_interface.hpp>
+#     $<INSTALL_INTERFACE:include/functional_dag/dag_interface.hpp>
 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/lib_utils.h>
-    $<INSTALL_INTERFACE:include/functional_dag/lib_utils.h>
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/lib_utils.h>
+#     $<INSTALL_INTERFACE:include/functional_dag/lib_utils.h>
     
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_impl.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/impl/dag_impl.hpp>
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_impl.hpp>
+#     $<INSTALL_INTERFACE:include/functional_dag/impl/dag_impl.hpp>
 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/filter_sys.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/filter_sys.hpp>
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/filter_sys.hpp>
+#     $<INSTALL_INTERFACE:include/functional_dag/filter_sys.hpp>
 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_fanout_impl.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/impl/dag_fanout_impl.hpp>
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_fanout_impl.hpp>
+#     $<INSTALL_INTERFACE:include/functional_dag/impl/dag_fanout_impl.hpp>
 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_node_impl.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/impl/dag_node_impl.hpp>
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_node_impl.hpp>
+#     $<INSTALL_INTERFACE:include/functional_dag/impl/dag_node_impl.hpp>
 
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dlpack.h>
-    $<INSTALL_INTERFACE:include/functional_dag/dlpack.h>
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dlpack.h>
+#     $<INSTALL_INTERFACE:include/functional_dag/dlpack.h>
     
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/core/dag_utils.hpp>
-    $<INSTALL_INTERFACE:include/functional_dag/core/dag_utils.hpp>)
+#     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/core/dag_utils.hpp>
+#     $<INSTALL_INTERFACE:include/functional_dag/core/dag_utils.hpp>)
+set(HEADERS_ROOT_INSTALL 
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dag_interface.hpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/lib_utils.h
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/filter_sys.hpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/dlpack.h)
 
-get_target_property(FN_DAG_PUBLIC_HEADERS functional_dag INTERFACE_SOURCES)
-set_target_properties(functional_dag PROPERTIES PUBLIC_HEADER "${FN_DAG_PUBLIC_HEADERS}")
+set(HEADERS_IMPL_INSTALL 
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_impl.hpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_fanout_impl.hpp
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/impl/dag_node_impl.hpp)
+      
+set(HEADERS_CORE_INSTALL 
+      ${CMAKE_CURRENT_SOURCE_DIR}/include/functional_dag/core/dag_utils.hpp)
+
+install(FILES ${HEADERS_ROOT_INSTALL} DESTINATION include/functional_dag)
+install(FILES ${HEADERS_IMPL_INSTALL} DESTINATION include/functional_dag/impl)
+install(FILES ${HEADERS_CORE_INSTALL} DESTINATION include/functional_dag/core)
+      
+# get_target_property(FN_DAG_PUBLIC_HEADERS functional_dag INTERFACE_SOURCES)
+# set_target_properties(functional_dag PROPERTIES PUBLIC_HEADER "${FN_DAG_PUBLIC_HEADERS}")
 
 install(TARGETS functional_dag 
     EXPORT dag_install
     LIBRARY DESTINATION lib
     ARCHIVE DESTINATION lib
     RUNTIME DESTINATION bin
-    PUBLIC_HEADER DESTINATION include/functional_dag)
+    # PUBLIC_HEADER DESTINATION include/functional_dag
+    )
 
 install(EXPORT dag_install
     FILE functional_dagConfig.cmake
