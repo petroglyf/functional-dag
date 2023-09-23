@@ -5,7 +5,7 @@
 // #include <random>
 
 const std::string expected_json = \
-"{\"nodes\":{\"test viz\":{\"guid\":1828100,\"parent\":\"test lib\"}},\"sources\":{\"test lib\":{\"guid\":8179941,\"opts\":[{\"id\":111111,\"val\":\"localhost\"},{\"id\":222222,\"val\":1234}]}}}\n";
+"{\"nodes\":{\"test viz\":{\"guid\":1828100,\"parents\":{\"\":\"test lib\"}},\"sources\":{\"test lib\":{\"guid\":8179941,\"opts\":[{\"id\":111111,\"val\":\"localhost\"},{\"id\":222222,\"val\":1234}]}}}\n";
 
 class src_mock : fn_dag::module_source {
   src_mock() {}
@@ -22,7 +22,7 @@ class node_mock : fn_dag::module_transmit {
 
 TEST_CASE( "Serializes JSON", "[libs.json_serialize]" ) {
   // Create a fake library and add it to the libs 
-  std::vector<fn_dag::library_spec> tree;
+  std::vector<fn_dag::library_spec> dag;
   fn_dag::library_spec lib1;
   lib1.name = "test lib";
   lib1.lib_guid = 8179941;
@@ -51,16 +51,16 @@ TEST_CASE( "Serializes JSON", "[libs.json_serialize]" ) {
   lib2.is_source = false;
 
   // // insert it to the graph
-  tree.push_back(lib1);
-  tree.push_back(lib2);
+  dag.push_back(lib1);
+  dag.push_back(lib2);
   // serialize out
-  std::string json_out = fsys_serialize(&tree);
+  std::string json_out = fsys_serialize(&dag);
   std::cout << "json_out:\n" << json_out << std::endl;
 
   REQUIRE( expected_json == json_out );
 }
 
-TEST_CASE( "Load JSON", "[libs.json_deserialize]" ) {
+TEST_CASE( "Deserializes JSON", "[libs.json_deserialize]" ) {
   std::unordered_map<uint32_t, fn_dag::instantiate_fn> library;
   fn_dag::instantiate_fn spec1;
   spec1 = [] (const fn_dag::lib_options *opts_read) {

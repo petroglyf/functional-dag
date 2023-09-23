@@ -70,11 +70,12 @@ namespace fn_dag {
     return std::vector<std::string>();
   }
 
-  module_source *module::get_slot_handle_as_source(const std::string &_slot_name) {
+  module_source *module::get_handle_as_source() {
     return nullptr;
   }
 
   module_transmit *module::get_slot_handle_as_mapping(const std::string &_slot_name) {
+    (void)_slot_name; // stub suppression
     return nullptr;
   }
 
@@ -85,7 +86,7 @@ namespace fn_dag {
     return MODULE_TYPE::SOURCE;
   }
 
-  module_source *source_handler::get_slot_handle_as_source(const std::string &_slot_name) {
+  module_source *source_handler::get_handle_as_source() {
     return handler;
   }
 
@@ -97,16 +98,17 @@ namespace fn_dag {
   }
 
   module_transmit *module_handler::get_slot_handle_as_mapping(const std::string &_slot_name) {
+    (void)_slot_name; // stub suppression
     return handler;
   }
 }
 
 
-string fsys_serialize(const vector<fn_dag::library_spec> * const _tree) {
+string fsys_serialize(const vector<fn_dag::library_spec> * const _dag) {
   Json::Value sources;
   Json::Value nodes;
   Json::Value root;
-  for(const auto &item : *_tree) {
+  for(const auto &item : *_dag) {
     Json::Value spec;
     spec["guid"] = item.lib_guid;
     bool is_src = item.is_source;
@@ -151,20 +153,13 @@ static uint32_t __get_guid(Json::Value guid_node) {
   return 0;
 }
 
-static const std::string __get_slot_name(Json::Value slot_node) {
-  Json::Value slot_name = slot_node["slot"];
-  if(!slot_name.isNull() && slot_name.isString())
-    return slot_name.asString();
-  return "";
-}
-
-static fn_dag::lib_options __generate_options(Json::Value spec_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
+static fn_dag::lib_options __generate_options(Json::Value spec_in) {
   fn_dag::lib_options dest_options;
 
   Json::Value options = spec_in["opts"];
   
   if(!options.isNull()) {
-    for(int i = 0;i < options.size();i++) {
+    for(uint32_t i = 0;i < options.size();i++) {
       fn_dag::construction_option dest_option;
       Json::Value serial_id_string = options[i]["id"];
       Json::Value serial_value = options[i]["val"];
@@ -197,16 +192,8 @@ static std::shared_ptr<fn_dag::module> __instantiate_from_library(Json::Value no
       spec_creator = library.at(s_guid);
     else
       return nullptr;
-    // std::shared_ptr<fn_dag::library_spec> spec;
-    // auto lib_it = std::find_if(library.begin(), library.end(), 
-    //                         [s_guid](std::shared_ptr<fn_dag::lib_specification> candidate) {
-    //                           return candidate->serial_id_guid == s_guid;
-    //                         });
-    // if(lib_it == library.end())
-    //   return nullptr;
-    // spec = *lib_it;
     
-    fn_dag::lib_options dest_options = __generate_options(node, library);
+    fn_dag::lib_options dest_options = __generate_options(node);
     return spec_creator(&dest_options);
   }
   return nullptr;
@@ -214,45 +201,73 @@ static std::shared_ptr<fn_dag::module> __instantiate_from_library(Json::Value no
 
 fn_dag::dag_manager<std::string> *fsys_deserialize(const std::string &json_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
   fn_dag::dag_manager<std::string> *manager = new fn_dag::dag_manager<std::string>();
-  manager->run_single_threaded(true);
-  int num_nodes_created = 0;
+  
   Json::Reader string_reader;
   Json::Value root;
   Json::Value sources;
   Json::Value nodes;
+  std::unordered_set<std::string> already_added;
   
   string_reader.parse(json_in, root, false);
   sources = root["sources"];
   nodes = root["nodes"];
 
   for(std::string name : sources.getMemberNames()) {
-    std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(sources[name], library);
-    const std::string slot_name = __get_slot_name(sources[name]);
-    if(lib_handle != nullptr && slot_name != "")
-      manager->add_dag(name, lib_handle->get_slot_handle_as_source(slot_name), true);
+        std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(sources[name], library);
+    if(lib_handle != nullptr) {
+      manager->add_dag(name, lib_handle->get_handle_as_source(), true);
+      already_added.insert(name);
+    }
   }
 
-  for(std::string name : nodes.getMemberNames()) {
-    if(nodes[name].isArray())
-      for( Json::Value slot_target : nodes[name]) {
-        Json::Value parent_value = nodes[name]["parent"];
-        Json::Value input_slot_name = nodes[name]["slot"];
-        
-        if(!parent_value.isNull() && parent_value.isString() && input_slot_name.isString()) {
-          std::string parent_name = parent_value.asString();
-          std::string input_slot = input_slot_name.asString();
-
-          if(manager->manager_contains_id(parent_name)) {
-            std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(nodes[name], library);
-            if(lib_handle != nullptr) {
-              manager->add_node(name, lib_handle->get_slot_handle_as_mapping(input_slot), parent_name);
-            }
-              
-          } else {
-            std::cerr << "no parent available for id " << name << std::endl;
+  std::vector<std::string> order_to_construct;
+  std::vector<std::string> nodes_left = nodes.getMemberNames();
+  std::vector<std::string> orphan_nodes;
+  
+  while(nodes_left.size() > 0) {
+    orphan_nodes.clear();
+    // While there are noes left, iterate over them and see if we can add some
+    for(std::string name : nodes_left) {
+      Json::Value parents_value = nodes[name]["parents"];
+      if(parents_value.isObject()) {
+        bool all_parents_available = true;
+        for(Json::Value slot_name : parents_value.getMemberNames()) {
+          Json::Value parent = parents_value[slot_name.asString()];
+          if(already_added.count(parent.asString()) == 0) {
+            all_parents_available = false;
+            break;
           }
         }
+        // all parents are available so let's construct it
+        if(all_parents_available) {
+          order_to_construct.push_back(name);
+          already_added.insert(name);
+        } else // ok it's an orphan on this pass.. maybe next time
+          orphan_nodes.push_back(name);
+      } else {
+        delete manager;
+        return nullptr;
       }
+    }
+    if(nodes_left.size() == orphan_nodes.size()) {
+      // If they're all orphaned, this tree is unconstructable. 
+      delete manager;
+      return nullptr;
+    }
+    nodes_left.swap(orphan_nodes);
+  }
+
+  for(std::string name : order_to_construct) {
+    std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(nodes[name], library);
+    if(lib_handle != nullptr) {
+      Json::Value parents_value = nodes[name]["parents"];
+      for(Json::Value slot_name : parents_value.getMemberNames()) {
+        Json::Value parent = parents_value[slot_name.asString()];
+        std::string input_slot = slot_name.asString();
+        std::string parent_name = parent.asString();
+        manager->add_node(name, lib_handle->get_slot_handle_as_mapping(input_slot), parent_name);
+      }
+    }
   }
 
   return manager;

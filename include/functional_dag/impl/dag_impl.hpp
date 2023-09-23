@@ -15,8 +15,9 @@
 #include <map>
 #include <iostream>
 #include <unordered_set>
+
 #include "functional_dag/dag_interface.hpp"
-#include "functional_dag/dag_fanout_impl.hpp"
+#include "functional_dag/impl/dag_fanout_impl.hpp"
 
 namespace fn_dag {
 
@@ -44,13 +45,13 @@ namespace fn_dag {
         dag_source<OriginType> *_lsource, 
         const _dag_context &_context, 
         bool _startThread) :
-                  m_children_ids(), 
-                  m_source(_lsource), 
-                  m_id(_id), 
+                  m_id(_id),
+                  m_source(_lsource),
                   m_children(_context), 
+                  m_children_ids(), 
                   g_context(_context) {
       if(_startThread)
-        startSource();
+        m_thread = std::thread(&dag::start_source, this);
     }
 
     ~dag() {
@@ -63,8 +64,8 @@ namespace fn_dag {
       return m_id;
     }
 
-    void manualPump(OriginType *rawDat) {
-      m_children.spreadAround(rawDat);
+    void manual_pump(OriginType *_raw_dat) {
+      m_children.fan_out(_raw_dat);
     }
 
 
@@ -73,64 +74,30 @@ namespace fn_dag {
     }
     
     template<typename In, typename Out> 
-    void addFilter(IDType _newID, dag_node<In, Out> *newFilter, IDType onNode) {
+    void add_filter(IDType _newID, dag_node<In, Out> *_new_filter, IDType _on_node) {
       _internal_dag_node<In, Out, IDType> *new_node;
-      new_node = new _internal_dag_node<In, Out, IDType>(_newID, newFilter, g_context);
+      new_node = new _internal_dag_node<In, Out, IDType>(_newID, _new_filter, g_context);
       m_children_ids.insert(_newID);
-      findAndAdd(new_node, onNode, this->get_id(), &m_children);
+      m_children.add_node_to_subdag(new_node, _on_node, m_id);
     }
 
     void print() {
-      *g_context.log << "->" << this->m_id << std::endl;
+      *g_context.log << "->" << m_id << std::endl;
       m_children.print(g_context.indent_str);
     }
 
     void push_once() {
-      if(!g_context.filter_off) {
-        // std::packaged_task<void()> task(std::bind(&dag<OriginType,IDType>::__push_once, this));
-        // // std::future<int> f1 = task.get_future();  // get a future
-        // std::thread tmp_thread(std::thread(std::move(task)));
-        // m_thread.swap(tmp_thread); // launch on a thread
-        __push_once();
-      } else {
-        __push_once();
-      }
-      
-    }
-
-  private:
-    thread m_thread;
-    void __push_once() {
       OriginType *dat = m_source->update();
       if(dat != nullptr)
         m_children.fan_out(dat);
     }
 
+  private:
+    thread m_thread;
     
-    void startsrc() {
+    void start_source() {
       while(!g_context.filter_off)
 	      push_once();
-    }
-    
-    void startSource() {
-      m_thread = std::thread(&dag::startsrc, this);
-    }
-    
-    template <typename In, typename Out, typename CurrOut>
-    bool findAndAdd(_internal_dag_node<In,Out,IDType> *addNode, const IDType onto, const IDType _parent_id, dag_fanout_node<CurrOut, IDType> *conn) {
-      if(onto == _parent_id) {
-        conn->add_node((_abstract_internal_dag_node<In, IDType>*)addNode);
-        return true;
-      } else {
-        for(auto child = conn->m_children.cbegin();child != conn->m_children.cend();child++) {
-          _internal_dag_node<In, CurrOut, IDType> *tn;
-          tn = static_cast<_internal_dag_node<In, CurrOut, IDType> *>(*child);
-          fn_dag::dag_fanout_node<CurrOut, IDType> *satn = tn->m_child;
-          if(findAndAdd(addNode, onto, (*child)->get_id(), satn))
-            return true;
-        }
-      }
-      return false;  
     }
   };
 };

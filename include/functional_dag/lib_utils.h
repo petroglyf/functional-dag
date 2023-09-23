@@ -38,7 +38,7 @@ namespace fn_dag {
 
     virtual MODULE_TYPE get_type();
     virtual std::vector<std::string> const get_available_slots();
-    virtual module_source *get_slot_handle_as_source(const std::string &_slot_name);
+    virtual module_source *get_handle_as_source();
     virtual module_transmit *get_slot_handle_as_mapping(const std::string &_slot_name);
   };
 
@@ -48,7 +48,7 @@ namespace fn_dag {
     ~source_handler();
 
     MODULE_TYPE get_type();
-    module_source *get_slot_handle_as_source(const std::string &_slot_name);
+    module_source *get_handle_as_source();
   private:
     module_source *handler;
   };
@@ -97,3 +97,6 @@ namespace fn_dag {
 
 std::string fsys_serialize(const vector<fn_dag::library_spec> * const);
 fn_dag::dag_manager<std::string> *fsys_deserialize(const std::string &json_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library);
+
+bool preflight_lib(const fs::path _lib_path);
+shared_ptr< vector<fs::directory_entry> > get_all_available_libs(const fs::directory_entry &library_path);

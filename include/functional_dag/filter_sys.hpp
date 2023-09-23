@@ -13,9 +13,8 @@
  */ 
 #pragma once
 
-#include "functional_dag/dag_impl.hpp"
-#include "functional_dag/dag_node_impl.hpp"
-#include "functional_dag/dag_interface.hpp"
+#include <functional_dag/impl/dag_impl.hpp>
+#include <functional_dag/dag_interface.hpp>
 
 namespace fn_dag {
 
@@ -29,25 +28,25 @@ namespace fn_dag {
       m_context.run_single_threaded = false;
     }
     ~dag_manager() {
-      clearAllTrees();
+      clear();
     }
-    vector<_dag_base<IDType> *> m_allTrees;
+    vector<_dag_base<IDType> *> m_all_dags;
     
     //implementation to template funcs must be visible to link correctly
     template <typename In, typename Out> 
-    void add_node(IDType _id, dag_node<In,Out> *newFilter, IDType _onto) {
-      if(newFilter != nullptr) {
-        for(auto t = m_allTrees.cbegin();t != m_allTrees.cend();t++) {
+    void add_node(IDType _id, dag_node<In,Out> *_new_filter, IDType _onto) {
+      if(_new_filter != nullptr) {
+        for(auto t = m_all_dags.cbegin();t != m_all_dags.cend();t++) {
           if((*t)->dag_contains(_onto) || (*t)->get_id() == _onto) {
             dag<In, IDType> *tptr = static_cast<dag<In, IDType>*>(*t);
-            tptr->addFilter(_id, newFilter, _onto);
+            tptr->add_filter(_id, _new_filter, _onto);
           }
         }
       }
     }
  
     bool manager_contains_id(IDType _parent_id) {
-      for(auto t = m_allTrees.cbegin();t != m_allTrees.cend();t++) {
+      for(auto t = m_all_dags.cbegin();t != m_all_dags.cend();t++) {
         if((*t)->dag_contains(_parent_id) || (*t)->get_id() == _parent_id)
           return true;
       }
@@ -71,28 +70,28 @@ namespace fn_dag {
     dag<Out, IDType> *add_dag(IDType _id, dag_source<Out> *_new_filter, bool _startImmediately) {
       if(_new_filter != nullptr) {
         dag<Out, IDType> *t = new dag<Out, IDType>(_id, _new_filter, m_context, _startImmediately);
-        m_allTrees.push_back(t);
+        m_all_dags.push_back(t);
         return t;
       }
       return nullptr;
     }
 
-  void printAllTrees() {
+  void print_all_dags() {
       *m_context.log << std::endl;
-      *m_context.log << "-----------Filter Tree-----------\n";
-      for(auto t = m_allTrees.cbegin();t != m_allTrees.cend();t++)
+      *m_context.log << "------------DAG Forest-----------\n";
+      for(auto t = m_all_dags.cbegin();t != m_all_dags.cend();t++)
         (*t)->print();  
       *m_context.log << "---------------------------------\n";
     }
     
-    void Stahp() {
+    void stahp() {
       m_context.filter_off = true;
     }
     
-    void clearAllTrees() {
-      for(auto t = m_allTrees.begin();t != m_allTrees.end();t++)
+    void clear() {
+      for(auto t = m_all_dags.begin();t != m_all_dags.end();t++)
         delete *t;
-      m_allTrees.clear();
+      m_all_dags.clear();
     }
 
 
