@@ -5,7 +5,7 @@
 // #include <random>
 
 const std::string expected_json = \
-"{\"nodes\":{\"test viz\":{\"guid\":1828100,\"parent\":\"test lib\"}},\"sources\":{\"test lib\":{\"guid\":8179941,\"opts\":[{\"id\":111111,\"val\":\"localhost\"},{\"id\":222222,\"val\":1234}]}}}\n";
+"{\"nodes\":{\"test viz\":{\"guid\":1828100,\"parents\":{\"\":\"test lib\"}},\"sources\":{\"test lib\":{\"guid\":8179941,\"opts\":[{\"id\":111111,\"val\":\"localhost\"},{\"id\":222222,\"val\":1234}]}}}\n";
 
 class src_mock : fn_dag::module_source {
   src_mock() {}
@@ -60,7 +60,7 @@ TEST_CASE( "Serializes JSON", "[libs.json_serialize]" ) {
   REQUIRE( expected_json == json_out );
 }
 
-TEST_CASE( "Load JSON", "[libs.json_deserialize]" ) {
+TEST_CASE( "Deserializes JSON", "[libs.json_deserialize]" ) {
   std::unordered_map<uint32_t, fn_dag::instantiate_fn> library;
   fn_dag::instantiate_fn spec1;
   spec1 = [] (const fn_dag::lib_options *opts_read) {
