@@ -7,8 +7,9 @@ project(functional-dag LANGUAGES CXX )
 include(FindPkgConfig REQUIRED)
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
+set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories("include/")
-add_compile_options("-stdlib=libc++")
+add_compile_options("-stdlib=libc++" "-Wall" "-Wextra" "-Wpedantic" "-Werror")
 
 option (DEBUG "Build debug version" ON)
 option (RELEASE "Build release version" OFF)
@@ -54,6 +55,16 @@ if (DEFINED Catch2_DIR)
   include(Catch)
   catch_discover_tests(tests)
 endif()
+
+########################################
+####### Lint command (optional) ########
+########################################
+add_custom_target(lint
+  COMMAND clang-tidy src/functional_dag/libutils.cpp -- -Iinclude/ -I${CMAKE_OSX_SYSROOT}/usr/include
+  WORKING_DIRECTORY "${CMAKE_CURRENT_SOURCE_DIR}"
+  COMMENT "Linting the source"
+  VERBATIM
+)
 
 ########################################
 ####### Install specification ##########

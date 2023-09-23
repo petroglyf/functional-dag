@@ -45,10 +45,10 @@ namespace fn_dag {
         dag_source<OriginType> *_lsource, 
         const _dag_context &_context, 
         bool _startThread) :
-                  m_children_ids(), 
-                  m_source(_lsource), 
-                  m_id(_id), 
+                  m_id(_id),
+                  m_source(_lsource),
                   m_children(_context), 
+                  m_children_ids(), 
                   g_context(_context) {
       if(_startThread)
         m_thread = std::thread(&dag::start_source, this);

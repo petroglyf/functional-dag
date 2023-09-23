@@ -75,6 +75,7 @@ namespace fn_dag {
   }
 
   module_transmit *module::get_slot_handle_as_mapping(const std::string &_slot_name) {
+    (void)_slot_name; // stub suppression
     return nullptr;
   }
 
@@ -97,6 +98,7 @@ namespace fn_dag {
   }
 
   module_transmit *module_handler::get_slot_handle_as_mapping(const std::string &_slot_name) {
+    (void)_slot_name; // stub suppression
     return handler;
   }
 }
@@ -151,20 +153,13 @@ static uint32_t __get_guid(Json::Value guid_node) {
   return 0;
 }
 
-static const std::string __get_slot_name(Json::Value slot_node) {
-  Json::Value slot_name = slot_node["slot"];
-  if(!slot_name.isNull() && slot_name.isString())
-    return slot_name.asString();
-  return "";
-}
-
-static fn_dag::lib_options __generate_options(Json::Value spec_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
+static fn_dag::lib_options __generate_options(Json::Value spec_in) {
   fn_dag::lib_options dest_options;
 
   Json::Value options = spec_in["opts"];
   
   if(!options.isNull()) {
-    for(int i = 0;i < options.size();i++) {
+    for(uint32_t i = 0;i < options.size();i++) {
       fn_dag::construction_option dest_option;
       Json::Value serial_id_string = options[i]["id"];
       Json::Value serial_value = options[i]["val"];
@@ -198,7 +193,7 @@ static std::shared_ptr<fn_dag::module> __instantiate_from_library(Json::Value no
     else
       return nullptr;
     
-    fn_dag::lib_options dest_options = __generate_options(node, library);
+    fn_dag::lib_options dest_options = __generate_options(node);
     return spec_creator(&dest_options);
   }
   return nullptr;

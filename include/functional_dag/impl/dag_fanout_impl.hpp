@@ -52,7 +52,7 @@ namespace fn_dag {
         for(auto it : m_children)
           child_threads.push_back(thread(&fn_dag::_abstract_internal_dag_node<Type, IDType>::run_filter, it, std::ref(_data)));
 
-        for(int i = 0;i < child_threads.size();i++)
+        for(uint32_t i = 0;i < child_threads.size();i++)
           child_threads[i].join();
       } else
         for(auto it : m_children)

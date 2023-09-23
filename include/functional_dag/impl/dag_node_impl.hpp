@@ -49,10 +49,10 @@ namespace fn_dag {
     
   public:
     _internal_dag_node(IDType _node_id, dag_node<In,Out> *_node, const fn_dag::_dag_context &_context) :
-      m_node_id(_node_id),
       m_node_hook(_node),
-      g_context(_context),
-      m_child(new dag_fanout_node<Out, IDType>(_context)){}
+      m_node_id(_node_id),
+      m_child(new dag_fanout_node<Out, IDType>(_context)),
+      g_context(_context){}
 
     ~_internal_dag_node() {
       delete m_child;
