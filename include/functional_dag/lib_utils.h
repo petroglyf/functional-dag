@@ -1,17 +1,14 @@
-/**
- *   ___                 .___               
- *  |_  \              __| _/____     ____  
- *   /   \    ______  / __ |\__  \   / ___\ 
- *  / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
- * /_/  \__\         \____ |(____  /\___  / 
- *                        \/     \//_____/   
- *                             
- * If a user decides to implement the functionals themselves, then they can use these interfaces.
- * 
- * @author: ndepalma@alum.mit.edu
- * @license: MIT License
- */ 
 #pragma once
+// ---------------------------------------------
+//    ___                 .___  
+//   |_  \              __| _/____     ____
+//    /   \    ______  / __ |\__  \   / ___\
+//   / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+//  /_/  \__\         \____ |(____  /\___  /
+//                         \/     \//_____/
+// ---------------------------------------------
+// @author ndepalma@alum.mit.edu
+
 #include <string>
 #include <vector>
 #include <filesystem>

@@ -39,6 +39,7 @@ Build dependencies:
 * jsoncpp 
 * ctest (if you want to unit test)
 * clang-tidy (if you want to lint the code as well)
+* doxygen (if you would like to generate docs)
 
 Dependencies during testing:
 * Catch2 (for unit testing)
