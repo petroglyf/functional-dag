@@ -28,9 +28,9 @@ graph LR;
 ```
 Then you would create 2 sources, and 3 nodes where 2 of the nodes are simple functions to be called and the last one is a visualizer. Each edge in the DAG is strongly typed and every node has "slots" in which it can receive data. This allows fan-in and fan-out architectures. 
 
-
 filter_sys.hpp provides the main hooks into the library. All you need to do is `#include <functional-dag/filter_sys.hpp` and create a dag. 
 
+API docs can be found [here](https://petrogly-ph.github.io/functional-dag/annotated.html).
 ### Build dependencies
 This project tries to minimize dependencies so as to not stack dependencies across larger projects and to make it easier to build simple layers to other languages like python. 
 
