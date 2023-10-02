@@ -3,8 +3,8 @@ require "formula"
 class FunctionalDag < Formula
   desc "A library for building functional dags"
   homepage "https://github.com/petrogly-ph/functional-dag"
-  url "https://github.com/petrogly-ph/functional-dag/archive/refs/tags/brew.tar.gz"
-  sha256 "49a315541f101350002034e84ddd071d3e746c9743318fd3887b69094d0dfdd9"
+  url "https://github.com/petrogly-ph/functional-dag/archive/refs/tags/brew-v0.5.tar.gz"
+  sha256 "dfac4aa7f23fc3b8415e3a3bd744d5316ae2d0674f4345bf1b3ea79486b9a58e"
   license "MIT"
   version "0.5"
 
