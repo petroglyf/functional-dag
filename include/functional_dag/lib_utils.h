@@ -68,17 +68,16 @@ namespace fn_dag {
   typedef struct {
     OPTION_TYPE type;
     union {
-      const char * string_value;
-      int int_value;
+      const char* string_value;
+      int32_t int_value;
       bool bool_value;
     } value;
     uint32_t serial_id;
-    string option_prompt; 
-    string short_description;
+    const char* option_prompt; 
+    const char* short_description;
   } construction_option; 
 
   typedef vector<construction_option> lib_options;
-  // using module_getter_fn = module* (*)(const lib_options *);
 
   typedef struct {
     uint32_t lib_guid;
@@ -89,7 +88,6 @@ namespace fn_dag {
   } library_spec;
 
   using instantiate_fn = std::function<shared_ptr<module>(const lib_options * const)>;
-  // using instantiate_fn = module* (*)(const lib_options * const);
 }
 
 std::string fsys_serialize(const vector<fn_dag::library_spec> * const);

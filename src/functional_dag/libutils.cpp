@@ -185,7 +185,7 @@ static fn_dag::lib_options __generate_options(Json::Value spec_in) {
 }
 
 static std::shared_ptr<fn_dag::module> __instantiate_from_library(Json::Value node, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
-  long s_guid = __get_guid(node);
+  uint32_t s_guid = __get_guid(node);
   if(s_guid != 0) {
     fn_dag::instantiate_fn spec_creator = nullptr;
     if(library.contains(s_guid))
