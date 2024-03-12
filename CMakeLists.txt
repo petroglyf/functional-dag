@@ -5,11 +5,13 @@ project(functional-dag LANGUAGES CXX )
 ####### Setting up compiler options #########
 #############################################
 include(FindPkgConfig REQUIRED)
+include(CPack)
+
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories("include/")
-add_compile_options("-stdlib=libc++" "-Wall" "-Wextra" "-Wpedantic" "-Werror")
+add_compile_options("-Wall" "-Wextra" "-Wpedantic" "-Werror")
 
 option (DEBUG "Build debug version" ON)
 option (RELEASE "Build release version" OFF)
@@ -27,7 +29,7 @@ endif ()
 ####### Find the needed packages #########
 ##########################################
 find_package(PkgConfig REQUIRED)
-find_package(Catch2 3 REQUIRED)
+find_package(Catch2 3)
 pkg_check_modules(JSONCPP REQUIRED IMPORTED_TARGET jsoncpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
@@ -44,7 +46,7 @@ target_link_libraries(functional_dag PRIVATE ${JSONCPP_LIBRARIES})
 ########################################
 ####### Build the testing files ########
 ########################################
-if (DEFINED Catch2_DIR)
+if (DEFINED Catch2_DIR AND DEFINED ${Catch2_DIR})
   add_executable(tests test/functional_dag/dag_tests.cpp 
                        test/functional_dag/lib_tests.cpp)
   target_include_directories(tests PRIVATE "include/" ${CATCH_INCLUDE_DIR})
