@@ -99,3 +99,17 @@ install(EXPORT dag_install
     FILE functional_dagConfig.cmake
     NAMESPACE FunctionalDag::
     DESTINATION lib/cmake/functional_dag)
+
+########################################
+##### Packaging specifications #########
+########################################
+set(CPACK_PACKAGE_CONTACT "ndepalma@alum.mit.edu")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nick DePalma <${CPACK_PACKAGE_CONTACT}>")
+
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A directed acyclic graph that runs a function on each node."
+    CACHE STRING "Many applications of vision require a single source (root) node that captures data from a source and distributes that data across nodes.")
+
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME}
+    CACHE STRING "Functional DAG is a DAG that implements lambdas at each point on the graph.")
+
+include(CPack) 
