@@ -80,4 +80,4 @@ jobs:
       id: pack
       shell: bash
       run: |
-        cpack -G DEB
+        echo `pwd` && cpack -G DEB
