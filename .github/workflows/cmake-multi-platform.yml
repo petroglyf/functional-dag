@@ -87,4 +87,4 @@ jobs:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
         releaseId: 'latest'
-          args: '*.deb'
+        args: '*.deb'
