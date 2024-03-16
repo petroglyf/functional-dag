@@ -32,9 +32,11 @@ shared_ptr< vector<fs::directory_entry> > get_all_available_libs(const fs::direc
 }
 
 bool preflight_lib(const fs::path _lib_path) {
-  
+  #ifdef __APPLE__
   void * const lib_handle = dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
-  
+  #else
+  void * const lib_handle = dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+  #endif
   bool has_description = dlsym(lib_handle, "get_simple_description") != NULL;
   has_description = has_description && dlsym(lib_handle, "get_detailed_description") != NULL;
   
