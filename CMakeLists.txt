@@ -101,6 +101,14 @@ install(EXPORT dag_install
 ########################################
 ##### Packaging specifications #########
 ########################################
+
+set(CPACK_GENERATOR "DEB")
+
+set(CPACK_PACKAGE_DIRECTORY ${PROJECT_BINARY_DIR}/package)
+set(CPACK_SOURCE_IGNORE_FILES .git/ .github/ .vscode/ .mypy_cache/ _CPack_Packages/
+${CMAKE_BINARY_DIR}/ ${PROJECT_BINARY_DIR}/
+)
+
 set(CPACK_PACKAGE_CONTACT "ndepalma@alum.mit.edu")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nick DePalma <${CPACK_PACKAGE_CONTACT}>")
 
@@ -109,5 +117,8 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A directed acyclic graph that runs a func
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME}
     CACHE STRING "Functional DAG is a DAG that implements lambdas at each point on the graph.")
+
+set(CPACK_DEBIAN_PACKAGE_DEPENDS "")
+set(CPACK_VERBATIM_VARIABLES TRUE)
 
 include(CPack) 
