@@ -61,7 +61,16 @@ jobs:
       run: |
         ! ${{ matrix.is_arm }} && echo "Is x86, skipping" && exit;
         sudo dpkg --add-architecture arm64
-        sudo cat /etc/apt/sources.list | sed -e 's/deb /deb [arch=arm64] /g' > source-mod.list
+        # sudo cat /etc/apt/sources.list | sed -e 's/deb /deb [arch=arm64] /g' > source-mod.list
+        
+        sudo echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy main restricted" >> source-mod.list
+        sudo echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates main restricted" >> source-mod.list
+        sudo echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy universe" >> source-mod.list
+        sudo echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates universe" >> source-mod.list
+        sudo echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy multiverse" >> source-mod.list
+        sudo echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-updates multiverse" >> source-mod.list
+        sudo echo "deb [arch=arm64] http://ports.ubuntu.com/ jammy-backports main restricted universe multiverse" >> source-mod.list
+        
         sudo mv source-mod.list /etc/apt/sources.list.d/arm-cross-compile-sources.list
         sudo sed -i 's/deb /deb [arch=amd64] /g' /etc/apt/sources.list
         #echo "raw sources list"
