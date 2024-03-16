@@ -67,7 +67,7 @@ jobs:
         echo "raw sources list"
         cat /etc/apt/sources.list
         echo "now for the cross compile"
-        cat /etc/apt/sources.list
+        cat /etc/apt/sources.list.d/arm-cross-compile-sources.list
         # sudo apt update
         # sudo apt-get install -y pkg-config catch2 libjsoncpp-dev:arm64 
         # sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-aarch64-linux-gnu
