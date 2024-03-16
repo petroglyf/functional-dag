@@ -64,12 +64,12 @@ jobs:
         sudo cat /etc/apt/sources.list | sed -e 's/deb /deb [arch=arm64] /g' > source-mod.list
         sudo mv source-mod.list /etc/apt/sources.list.d/arm-cross-compile-sources.list
         sudo sed -i 's/deb /deb [arch=amd64] /g' /etc/apt/sources.list
-        echo "raw sources list"
-        cat /etc/apt/sources.list
-        echo "now for the cross compile"
-        cat /etc/apt/sources.list.d/arm-cross-compile-sources.list
-        # sudo apt update
-        # sudo apt-get install -y pkg-config catch2 libjsoncpp-dev:arm64 
+        #echo "raw sources list"
+        #cat /etc/apt/sources.list
+        #echo "now for the cross compile"
+        #cat /etc/apt/sources.list.d/arm-cross-compile-sources.list
+        sudo apt update
+        sudo apt-get install -y pkg-config catch2 libjsoncpp-dev:arm64 
         # sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-aarch64-linux-gnu
     - name: Install dependencies if x86-64
       run: |
