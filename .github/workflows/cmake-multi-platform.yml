@@ -54,15 +54,16 @@ jobs:
         echo "build-output-dir=${{ github.workspace }}/build" >> "$GITHUB_OUTPUT"
 
 
-    - name: Install dependencies
+    - name: Install dependencies if Arm
       # Turn repeated input strings (such as the build output directory) into step outputs. These step outputs can be used throughout the workflow file.
-      id: deps
+      id: deps-arm
       shell: bash
       run: |
         ! ${{ matrix.is_arm }} && echo "Is x86" && exit;
         ${{ matrix.is_arm }} && sudo apt-get install -y pkg-config catch2 libjsoncpp-dev:arm64 
         ${{ matrix.is_arm }} && sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-aarch64-linux-gnu
         ! ${{ matrix.is_arm }} && sudo apt-get install -y pkg-config catch2 libjsoncpp-dev
+    - name: Install dependencies if x86
       run: |
         ${{ matrix.is_arm }} && echo "Is arm" && exit; 
         ${{ matrix.is_arm }} && sudo apt-get install -y pkg-config catch2 libjsoncpp-dev:arm64 
