@@ -90,6 +90,8 @@ jobs:
       run: |
         # pkg-config --cflags jsoncpp
         #dpkg-query -L libjsoncpp-dev
+        export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
+        pkg-config --libs --cflags jsoncpp
         cmake -DCMAKE_TOOLCHAIN_FILE=cmake-toolchains/arm64-tc.cmake
         -B ${{ steps.strings.outputs.build-output-dir }}
         #-DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }}
