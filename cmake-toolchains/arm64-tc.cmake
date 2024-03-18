@@ -7,7 +7,7 @@ set(CMAKE_CXX_COMPILER g++)
 
 # where is the target environment located
 set(CMAKE_FIND_ROOT_PATH /usr/lib/aarch64-linux-gnu)
-
+message("Setting find root path to aarch64")
 # adjust the default behavior of the FIND_XXX() commands:
 # search programs in the host environment
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM NEVER)
