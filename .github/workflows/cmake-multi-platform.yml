@@ -33,7 +33,7 @@ jobs:
             is_arm: false
           - os: ubuntu-latest
             c_compiler: aarch64-linux-gnu-gcc
-            cpp_compiler: g++
+            cpp_compiler: aarch64-linux-gnu-g++
             is_arm: true
         exclude:
           - os: windows-latest
@@ -79,7 +79,7 @@ jobs:
         #cat /etc/apt/sources.list.d/arm-cross-compile-sources.list
         sudo apt update
         sudo apt-get install -y pkg-config catch2 libjsoncpp-dev:arm64 
-        # sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-aarch64-linux-gnu
+        sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu
     - name: Install dependencies if x86-64
       run: |
         ${{ matrix.is_arm }} && echo "Is ARM, skipping" && exit; 
