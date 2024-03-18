@@ -5,7 +5,6 @@ project(functional-dag LANGUAGES CXX )
 ####### Setting up compiler options #########
 #############################################
 include(FindPkgConfig REQUIRED)
-include(CPack)
 
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
