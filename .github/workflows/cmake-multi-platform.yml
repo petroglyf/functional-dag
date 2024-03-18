@@ -33,7 +33,7 @@ jobs:
             is_arm: false
           - os: ubuntu-latest
             c_compiler: aarch64-linux-gnu-gcc
-            cpp_compiler: aarch64-linux-gnu-g++
+            cpp_compiler: g++
             is_arm: true
         exclude:
           - os: windows-latest
