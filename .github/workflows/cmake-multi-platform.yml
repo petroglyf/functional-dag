@@ -105,7 +105,7 @@ jobs:
         cd build && cpack -G DEB
         # ${{ matrix.is_arm }} && mv package/ package_arm64/;
         # ! ${{ matrix.is_arm }} && mv package/ package_amd64/; 
-        # echo "Complete"
+        echo "Complete"
 
     - uses: actions/upload-artifact@v4
       with:
