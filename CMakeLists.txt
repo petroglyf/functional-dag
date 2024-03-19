@@ -119,6 +119,6 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A directed acyclic graph that runs a func
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME}
     CACHE STRING "Functional DAG is a DAG that implements lambdas at each point on the graph.")
-set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CMAKE_PROJECT_VERSION}:${ARCHITECTURE_ID})
+set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CMAKE_PROJECT_VERSION}.${ARCHITECTURE_ID})
     
 include(CPack) 
