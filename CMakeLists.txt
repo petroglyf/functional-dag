@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.6)
-project(functional-dag LANGUAGES CXX )
+project(functional-dag LANGUAGES CXX VERSION 0.5)
 
 #############################################
 ####### Setting up compiler options #########
@@ -112,13 +112,12 @@ ${CMAKE_BINARY_DIR}/ ${PROJECT_BINARY_DIR}/
 
 set(CPACK_PACKAGE_CONTACT "ndepalma@alum.mit.edu")
 set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nick DePalma <${CPACK_PACKAGE_CONTACT}>")
-
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${ARCHITECTURE_ID}")
 set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A directed acyclic graph that runs a function on each node."
     CACHE STRING "Many applications of vision require a single source (root) node that captures data from a source and distributes that data across nodes.")
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME}
     CACHE STRING "Functional DAG is a DAG that implements lambdas at each point on the graph.")
-
-set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}:${ARCHITECTURE_ID})
+set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CMAKE_PROJECT_VERSION}:${ARCHITECTURE_ID})
     
 include(CPack) 
