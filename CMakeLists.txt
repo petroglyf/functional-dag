@@ -1,15 +1,20 @@
 cmake_minimum_required(VERSION 3.6)
-project(functional-dag LANGUAGES CXX )
+project(functional-dag LANGUAGES CXX VERSION 0.5)
 
 #############################################
 ####### Setting up compiler options #########
 #############################################
 include(FindPkgConfig REQUIRED)
+
+if (NOT DEFINED ARCHITECTURE_ID)
+  set (ARCHITECTURE_ID "apple")
+endif ()
+
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
 include_directories("include/")
-add_compile_options("-stdlib=libc++" "-Wall" "-Wextra" "-Wpedantic" "-Werror")
+add_compile_options("-Wall" "-Wextra" "-Wpedantic" "-Werror")
 
 option (DEBUG "Build debug version" ON)
 option (RELEASE "Build release version" OFF)
@@ -27,7 +32,7 @@ endif ()
 ####### Find the needed packages #########
 ##########################################
 find_package(PkgConfig REQUIRED)
-find_package(Catch2 3 REQUIRED)
+find_package(Catch2 3)
 pkg_check_modules(JSONCPP REQUIRED IMPORTED_TARGET jsoncpp)
 
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${TORCH_CXX_FLAGS}")
@@ -44,7 +49,7 @@ target_link_libraries(functional_dag PRIVATE ${JSONCPP_LIBRARIES})
 ########################################
 ####### Build the testing files ########
 ########################################
-if (DEFINED Catch2_DIR)
+if (DEFINED Catch2_DIR AND DEFINED ${Catch2_DIR})
   add_executable(tests test/functional_dag/dag_tests.cpp 
                        test/functional_dag/lib_tests.cpp)
   target_include_directories(tests PRIVATE "include/" ${CATCH_INCLUDE_DIR})
@@ -97,3 +102,23 @@ install(EXPORT dag_install
     FILE functional_dagConfig.cmake
     NAMESPACE FunctionalDag::
     DESTINATION lib/cmake/functional_dag)
+
+########################################
+##### Packaging specifications #########
+########################################
+set(CPACK_PACKAGE_DIRECTORY ${PROJECT_BINARY_DIR}/package)
+set(CPACK_SOURCE_IGNORE_FILES .git/ .github/ .vscode/ .mypy_cache/ _CPack_Packages/
+${CMAKE_BINARY_DIR}/ ${PROJECT_BINARY_DIR}/
+)
+
+set(CPACK_PACKAGE_CONTACT "ndepalma@alum.mit.edu")
+set(CPACK_DEBIAN_PACKAGE_MAINTAINER "Nick DePalma <${CPACK_PACKAGE_CONTACT}>")
+set(CPACK_DEBIAN_PACKAGE_ARCHITECTURE "${ARCHITECTURE_ID}")
+set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A directed acyclic graph that runs a function on each node."
+    CACHE STRING "Many applications of vision require a single source (root) node that captures data from a source and distributes that data across nodes.")
+
+set(CPACK_PACKAGE_NAME ${PROJECT_NAME}
+    CACHE STRING "Functional DAG is a DAG that implements lambdas at each point on the graph.")
+set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CMAKE_PROJECT_VERSION}.${ARCHITECTURE_ID})
+    
+include(CPack) 
