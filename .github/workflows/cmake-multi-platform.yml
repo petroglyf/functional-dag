@@ -84,7 +84,9 @@ jobs:
       # See https://cmake.org/cmake/help/latest/variable/CMAKE_BUILD_TYPE.html?highlight=cmake_build_type
       run: |
         export PKG_CONFIG_PATH=/usr/lib/aarch64-linux-gnu/pkgconfig
-        cmake -B ${{ steps.strings.outputs.build-output-dir }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -S ${{ github.workspace }}
+        ${{ matrix.is_arm }} && cmake -B ${{ steps.strings.outputs.build-output-dir }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} -DARCHITECTURE_ID='arm64' -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -S ${{ github.workspace }};
+        ! ${{ matrix.is_arm }} && cmake -B ${{ steps.strings.outputs.build-output-dir }} -DCMAKE_CXX_COMPILER=${{ matrix.cpp_compiler }} -DARCHITECTURE_ID='amd64' -DCMAKE_C_COMPILER=${{ matrix.c_compiler }} -DCMAKE_BUILD_TYPE=${{ matrix.build_type }} -S ${{ github.workspace }};
+        echo "Completed Configuration"
 
     - name: Build
       # Build your program with the given configuration. Note that --config is needed because the default Windows generator is a multi-config generator (Visual Studio generator).
@@ -101,9 +103,9 @@ jobs:
       shell: bash
       run: |
         cd build && cpack -G DEB
-        ${{ matrix.is_arm }} && mv package/ package_arm64/;
-        ! ${{ matrix.is_arm }} && mv package/ package_amd64/; 
-        echo "Complete"
+        # ${{ matrix.is_arm }} && mv package/ package_arm64/;
+        # ! ${{ matrix.is_arm }} && mv package/ package_amd64/; 
+        # echo "Complete"
 
     - uses: actions/upload-artifact@v4
       with:
@@ -114,7 +116,7 @@ jobs:
     
         # A file, directory or wildcard pattern that describes what to upload
         # Required.
-        path: 'build/package*'
+        path: 'build/package/*.deb'
     
         # The desired behavior if no files are found using the provided path.
         # Available Options:

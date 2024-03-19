@@ -6,6 +6,7 @@ project(functional-dag LANGUAGES CXX )
 #############################################
 include(FindPkgConfig REQUIRED)
 
+set (ARCHITECTURE_ID "apple")
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -110,5 +111,6 @@ set(CPACK_PACKAGE_DESCRIPTION_SUMMARY "A directed acyclic graph that runs a func
 
 set(CPACK_PACKAGE_NAME ${PROJECT_NAME}
     CACHE STRING "Functional DAG is a DAG that implements lambdas at each point on the graph.")
-
+set(CPACK_PACKAGE_FILE_NAME ${CPACK_PACKAGE_NAME}-${CPACK_PACKAGE_VERSION}-${CPACK_SYSTEM_NAME}:${ARCHITECTURE_ID})
+    
 include(CPack) 
