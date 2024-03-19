@@ -6,7 +6,10 @@ project(functional-dag LANGUAGES CXX VERSION 0.5)
 #############################################
 include(FindPkgConfig REQUIRED)
 
-set (ARCHITECTURE_ID "apple")
+if (NOT DEFINED ARCHITECTURE_ID)
+  set (ARCHITECTURE_ID "apple")
+endif ()
+
 set (CMAKE_CXX_STANDARD 20)
 set (CMAKE_CXX_STANDARD_REQUIRED ON)
 set (CMAKE_EXPORT_COMPILE_COMMANDS ON)
@@ -103,8 +106,6 @@ install(EXPORT dag_install
 ########################################
 ##### Packaging specifications #########
 ########################################
-set(CPACK_GENERATOR "DEB")
-
 set(CPACK_PACKAGE_DIRECTORY ${PROJECT_BINARY_DIR}/package)
 set(CPACK_SOURCE_IGNORE_FILES .git/ .github/ .vscode/ .mypy_cache/ _CPack_Packages/
 ${CMAKE_BINARY_DIR}/ ${PROJECT_BINARY_DIR}/
