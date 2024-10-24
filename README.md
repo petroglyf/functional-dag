@@ -6,18 +6,25 @@ A functional dag is a multi-threaded design pattern that runs simple $\lambda$ f
 Cognitive architectures can become very complicated very fast. Typically when designing these complex cognitive architectures, we're left with either a single path through the code network (e.g. a neural network) or giant speghetti code architectures used in research that are more experimental. This library was built primarily with cognitive perception systems in mind. While not impossible, it is challenging to push information back to early pre-processing stages. This constraint makes users of this library think twice about what assumptions they've made in which state needs to be transmitted back up the DAG. On the other hand, it is also more expressive than typical AI pipelines that force data through the entire network regardless of whether the data should be transmitted. This flow pattern is ideal for some cognitive systems like robotic vision and some single direction modules within larger cognitive architectures.
 
 ### Build and install
-OS Support: ![Linux](https://img.shields.io/badge/-Linux-grey?logo=linux) ![macOS](https://img.shields.io/badge/-macOS-grey?logo=macos)
+OS Support: ![Ubuntu](https://img.shields.io/badge/-Ubuntu-grey?logo=ubuntu) ![macOS](https://img.shields.io/badge/-macOS-grey?logo=macos)
 
 Status: [![Ubuntu Build](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-build.yml/badge.svg?branch=main)](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-build.yml?query=branch%3Amain)  [![Ubuntu Test](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-test.yml/badge.svg?branch=main)](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-test.yml?query=branch%3Amain)
 
-The build is CMake based and is built for cxx20 standards and we currently only support [homebrew](https://brew.sh/). 
+The build is CMake based and is built for cxx20 standards. First class build support is given to Ubuntu and MacOS through the [homebrew](https://brew.sh/) infrastrucure.
 
-``` bash
-$ git clone https://github.com/petrogly-ph/functional-dag
-$ cd functional-dag
-$ brew install --build-from-source Formula/functional-dag.rb
+#### Installing via homebrew
+```bash
+$ brew tap petroglyf/functional-dag https://github.com/petroglyf/functional-dag
+$ brew install petroglyf/functional-dag/functional-dag
 ```
 
+#### Installing via aptitude
+```bash
+$ curl -s --compressed "https://petroglyf.github.io/ppa/KEY.gpg" | gpg --dearmor | sudo tee /etc/apt/trusted.gpg.d/ppa.gpg >/dev/null
+$ sudo curl -s --compressed -o /etc/apt/sources.list.d/packages.list "https://petroglyf.github.io/ppa/packages.list"
+$ apt update
+$ apt install functional-dag
+```
 ## User docs
 There are two ways to use this. 1) Load a DAG via JSON, and 2) Construct the DAG in c++. 
 
