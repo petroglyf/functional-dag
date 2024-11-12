@@ -179,7 +179,7 @@ TEST_CASE( "Print the dag and check results", "[dag.print]" ) {
   manager.set_logging_stream(&output_stream);
   manager.print_all_dags();
   std::string final_string = output_stream.str();
-  auto num_newlines = std::ranges::count(final_string, '\n');
+  auto num_newlines = std::count(final_string.begin(), final_string.end(), '\n');
   
   // 10 nodes, 2 header+footer, 1 extra 
   REQUIRE( num_newlines == 10+2+1 );
