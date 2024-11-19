@@ -60,7 +60,7 @@ if (DEFINED Catch2_DIR AND DEFINED ${Catch2_DIR})
   include(Catch)
   catch_discover_tests(tests)
 endif()
-
+message(${CMAKE_OSX_SYSROOT})
 ########################################
 ####### Lint command (optional) ########
 ########################################

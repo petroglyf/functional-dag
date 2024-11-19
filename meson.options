@@ -1,0 +1,7 @@
+option(
+    'ARCH_ID',
+    type: 'combo',
+    choices: ['apple', 'arm64', 'amd64'],
+    value: 'apple',
+    description: 'Which architecture we are building for.',
+)

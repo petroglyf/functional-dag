@@ -1,0 +1,11 @@
+Package: functional-dag
+Priority: optional
+Maintainer: Nick DePalma <ndepalma@alum.mit.edu>
+Standards-Version: 4.6.2
+Homepage: https://github.com/petroglyf/functional-dag
+Architecture: arm64
+Multi-Arch: foreign
+Description: A directed acyclic graph that runs a function on each node.
+Section: devel
+Version: 0.5
+Bugs: https://github.com/petroglyf/functional-dag/issues
