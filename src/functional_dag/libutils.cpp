@@ -1,15 +1,32 @@
-#include <stdlib.h> 
+// ---------------------------------------------
+//    ___                 .___
+//   |_  \              __| _/____     ____
+//    /   \    ______  / __ |\__  \   / ___\
+//   / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+//  /_/  \__\         \____ |(____  /\___  /
+//                         \/     \//_____/
+// ---------------------------------------------
+// @author ndepalma@alum.mit.edu
 #include <dlfcn.h>
-#include <string>
-#include <vector>
-#include <filesystem>
-#include <iostream>
-#include <thread>         // std::this_thread::sleep_for
-#include <chrono>         // std::chrono::seconds
-
 #include <functional_dag/dlpack.h>
 #include <functional_dag/lib_utils.h>
-#include "json/json.h"
+#include <stdlib.h>
+
+#include <algorithm>
+#include <cstdint>
+#include <filesystem>
+#include <functional_dag/dag_interface.hpp>
+#include <iostream>
+#include <list>
+#include <numeric>
+#include <string>
+#include <vector>
+
+#include "fb_gen/lib_spec_generated.h"
+#include "flatbuffers/flatbuffer_builder.h"
+#include "flatbuffers/idl.h"
+#include "flatbuffers/util.h"
+#include "functional_dag/incbin_util.h"
 
 #ifdef __APPLE__
 static const string dylib_suffix("dylib");
@@ -19,257 +36,179 @@ static const string dylib_suffix("so");
 
 using namespace std;
 
-shared_ptr< vector<fs::directory_entry> > get_all_available_libs(const fs::directory_entry &library_path) {
-  shared_ptr< vector<fs::directory_entry> > all_files(new vector<fs::directory_entry>());
+INCBIN(g, schema, STR(SCHEMA_FILE));
 
-  if(library_path.exists()) {
-    for (const auto & entry : fs::directory_iterator(library_path.path()))
-      if(entry.path().string().ends_with(dylib_suffix))
-        all_files->push_back(entry);
+static flatbuffers::Parser g_parser;
+static bool has_initialized = false;
+
+flatbuffers::Parser *__get_parser() {
+  if (has_initialized) return &g_parser;
+
+  std::string pipe_spec_data{
+      g_schema_start,
+      static_cast<size_t>((char *)&g_schema_end - (char *)&g_schema_start)};
+
+  if (!g_parser.Deserialize(reinterpret_cast<uint8_t *>(pipe_spec_data.data()),
+                            pipe_spec_data.size())) {
+    std::cerr << "Issue deserializing schema!" << std::endl;
+    return nullptr;
+  }
+
+  has_initialized = true;
+  return &g_parser;
+}
+
+[[nodiscard]] vector<fs::directory_entry> get_all_available_libs(
+    const fs::directory_entry &library_path) {
+  vector<fs::directory_entry> all_files{};
+
+  if (library_path.exists()) {
+    for (const auto &entry : fs::directory_iterator(library_path.path()))
+      if (entry.path().string().ends_with(dylib_suffix))
+        all_files.push_back(entry);
   } else
-    cerr << "Could not find library directory: " << library_path.path().string() << endl;
+    cerr << "Could not find library directory: " << library_path.path().string()
+         << endl;
   return all_files;
 }
 
-bool preflight_lib(const fs::path _lib_path) {
-  #ifdef __APPLE__
-  void * const lib_handle = dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
-  #else
-  void * const lib_handle = dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
-  #endif
-  bool has_description = dlsym(lib_handle, "get_simple_description") != NULL;
-  has_description = has_description && dlsym(lib_handle, "get_detailed_description") != NULL;
-  
-  bool has_guid = dlsym(lib_handle, "get_serial_guid") != NULL;
-  bool has_name = dlsym(lib_handle, "get_name") != NULL;
-  bool has_options = dlsym(lib_handle, "get_options") != NULL;
-  bool has_module = dlsym(lib_handle, "get_module") != NULL;
-  bool has_source_id = dlsym(lib_handle, "is_source") != NULL;
-  
-  
+bool library::preflight_lib(const fs::path _lib_path) {
+#ifdef __APPLE__
+  void *const lib_handle =
+      dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
+#else
+  void *const lib_handle = dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+#endif
+
+  bool has_node_details = dlsym(lib_handle, "get_library_details") != nullptr;
+  bool has_constructor = dlsym(lib_handle, "construct_node") != nullptr;
   dlclose(lib_handle);
 
-  // std::cout << "guid: " << has_guid << std::endl;
-  // std::cout << "name: " << has_name << std::endl;
-  // std::cout << "opts: " << has_options << std::endl;
-  // std::cout << "has source: " << has_source_id << std::endl;
-  // std::cout << "desc: " << has_description << std::endl;
-  // std::cout << "module: " << has_module << std::endl;
-  return has_guid && has_name && has_description && has_module && has_options && has_source_id;
+  return has_node_details && has_constructor;
 }
 
+void library::load_lib(const fs::path _lib_path) {
+  // Open the dynamic library
+  void *const lib_handle =
+      dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
 
-namespace fn_dag {
-  
+  // Resolve the function to get details about the dynamic library
+  void *get_lib_details_fn = dlsym(lib_handle, "get_library_details");
+  std::function<get_library_fn_type> get_library_details(
+      reinterpret_cast<get_library_fn_type *>(get_lib_details_fn));
 
-  module::module() {}
+  // Finally get the nodes that can be constructed from this library
+  library_spec specification = get_library_details();
+  for (auto &spec : specification.available_nodes) {
+    GUID<node_spec> guid{spec.guid._id};
+    construction_signature *constructor =
+        reinterpret_cast<construction_signature *>(
+            dlsym(lib_handle, "construct_node"));
 
-  MODULE_TYPE module::get_type() {
-    return MODULE_TYPE::UNDEFINED;
-  }
+    constructors[guid] = std::function<construction_signature>(constructor);
 
-  std::vector<std::string> const module::get_available_slots() {
-    return std::vector<std::string>();
-  }
-
-  module_source *module::get_handle_as_source() {
-    return nullptr;
-  }
-
-  module_transmit *module::get_slot_handle_as_mapping(const std::string &_slot_name) {
-    (void)_slot_name; // stub suppression
-    return nullptr;
-  }
-
-  source_handler::source_handler(module_source *_handle) : handler(_handle) {}
-  source_handler::~source_handler() {}
-
-  MODULE_TYPE source_handler::get_type() {
-    return MODULE_TYPE::SOURCE;
-  }
-
-  module_source *source_handler::get_handle_as_source() {
-    return handler;
-  }
-
-  module_handler::module_handler(module_transmit *_handle) : handler(_handle) {}
-  module_handler::~module_handler() {}
-
-  MODULE_TYPE module_handler::get_type() {
-    return MODULE_TYPE::FILTER;
-  }
-
-  module_transmit *module_handler::get_slot_handle_as_mapping(const std::string &_slot_name) {
-    (void)_slot_name; // stub suppression
-    return handler;
-  }
-}
-
-
-string fsys_serialize(const vector<fn_dag::library_spec> * const _dag) {
-  Json::Value sources;
-  Json::Value nodes;
-  Json::Value root;
-  for(const auto &item : *_dag) {
-    Json::Value spec;
-    spec["guid"] = item.lib_guid;
-    bool is_src = item.is_source;
-    Json::Value options;
-    for(auto option : item.instantiation_options) {
-      Json::Value option_val;
-      option_val["id"] = option.serial_id;
-      switch(option.type) {
-        case fn_dag::OPTION_TYPE::STRING:
-          option_val["val"] = option.value.string_value;
-          break;
-        case fn_dag::OPTION_TYPE::INT:
-          option_val["val"] = option.value.int_value;
-          break;
-        case fn_dag::OPTION_TYPE::BOOL:
-          option_val["val"] = option.value.bool_value;
-          break;
-      }
-      options.append(option_val);
-    }
-    if(options.size() > 0) 
-      spec["opts"] = options;
-
-    if(is_src) {
-      sources[item.name] = spec;
-    } else {
-      spec["parent"] = item.parent_name;
-      nodes[item.name] = spec;
+    switch (spec.module_type) {
+      case fn_dag::NODE_TYPE_SOURCE:
+        break;
+      case fn_dag::NODE_TYPE_FILTER:
+        break;
+      default:
+        std::cerr << "Module type unsupported:" << spec.module_type
+                  << std::endl;
     }
   }
-
-  root["sources"] = sources;
-  root["nodes"] = nodes;
-  Json::FastWriter fastWriter;
-  return fastWriter.write(root);;
 }
 
-static uint32_t __get_guid(Json::Value guid_node) {
-  Json::Value guid = guid_node["guid"];
-  if(!guid.isNull() && guid.isUInt())
-    return guid.asUInt();
-  return 0;
+string fsys_serialize(const uint8_t *serialized_dag) {
+  const flatbuffers::Parser *parser = __get_parser();
+  std::string jsongen;
+  GenerateText(*parser, serialized_dag, &jsongen);
+  return jsongen;
 }
 
-static fn_dag::lib_options __generate_options(Json::Value spec_in) {
-  fn_dag::lib_options dest_options;
-
-  Json::Value options = spec_in["opts"];
-  
-  if(!options.isNull()) {
-    for(uint32_t i = 0;i < options.size();i++) {
-      fn_dag::construction_option dest_option;
-      Json::Value serial_id_string = options[i]["id"];
-      Json::Value serial_value = options[i]["val"];
-      if(!serial_value.isNull() && !serial_id_string.isNull()) {
-        dest_option.serial_id = serial_id_string.asUInt();
-        
-        if(serial_value.isInt()) {
-          dest_option.type = fn_dag::OPTION_TYPE::INT;
-          dest_option.value.int_value = serial_value.asInt();
-        } else if (serial_value.isBool()) {
-          dest_option.type = fn_dag::OPTION_TYPE::BOOL;
-          dest_option.value.bool_value = serial_value.asBool();
-        } else if (serial_value.isString()) {
-          dest_option.type = fn_dag::OPTION_TYPE::STRING;
-          dest_option.value.string_value = strdup(serial_value.asString().c_str());
-        } else
-          std::cout << "Warning, unknown converstion for value: " << serial_value << std::endl;
-        dest_options.push_back(dest_option);
+void library::_create_node(dag_manager<std::string> &manager,
+                           const fn_dag::node_spec *spec) {
+  const fn_dag::GUID_vals *s_guid = spec->target_id();
+  if (s_guid != nullptr) {
+    const fn_dag::GUID<node_spec> guid(*s_guid);
+    if (constructors.contains(guid)) {
+      std::function<construction_signature> spec_creator =
+          constructors.at(guid);
+      if (!spec_creator(manager, *spec)) {
+        std::cerr << "Unable to construct node: " << spec->name()->c_str()
+                  << std::endl;
       }
     }
   }
-  return dest_options;
 }
 
-static std::shared_ptr<fn_dag::module> __instantiate_from_library(Json::Value node, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
-  uint32_t s_guid = __get_guid(node);
-  if(s_guid != 0) {
-    fn_dag::instantiate_fn spec_creator = nullptr;
-    if(library.contains(s_guid))
-      spec_creator = library.at(s_guid);
-    else
-      return nullptr;
-    
-    fn_dag::lib_options dest_options = __generate_options(node);
-    return spec_creator(&dest_options);
+fn_dag::dag_manager<std::string> *library::fsys_deserialize(
+    const std::string &json_in) {
+  flatbuffers::Parser *const parser = __get_parser();
+  if (!parser->ParseJson(json_in.c_str())) {
+    std::cerr << "Error parsing JSON: " << parser->error_.c_str() << std::endl;
+    return nullptr;
   }
-  return nullptr;
-}
 
-fn_dag::dag_manager<std::string> *fsys_deserialize(const std::string &json_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library) {
-  fn_dag::dag_manager<std::string> *manager = new fn_dag::dag_manager<std::string>();
-  
-  Json::Reader string_reader;
-  Json::Value root;
-  Json::Value sources;
-  Json::Value nodes;
-  std::unordered_set<std::string> already_added;
-  
-  string_reader.parse(json_in, root, false);
-  sources = root["sources"];
-  nodes = root["nodes"];
+  std::set<std::string_view> nodes_added;
+  fn_dag::dag_manager<std::string> *manager =
+      new fn_dag::dag_manager<std::string>();
+  const flatbuffers::FlatBufferBuilder &buffer = parser->builder_;
 
-  for(std::string name : sources.getMemberNames()) {
-        std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(sources[name], library);
-    if(lib_handle != nullptr) {
-      manager->add_dag(name, lib_handle->get_handle_as_source(), true);
-      already_added.insert(name);
+  flatbuffers::Verifier verifier(buffer.GetBufferPointer(), buffer.GetSize());
+  if (fn_dag::Verifypipe_specBuffer(verifier)) {
+    const auto *pipe_spec = fn_dag::Getpipe_spec(buffer.GetBufferPointer());
+
+    ////////////////////////////////////////////////
+    /// Begin by instantiating all of the nodes
+    const auto *vec = pipe_spec->sources();
+
+    for (uint32_t i = 0; i < vec->size(); i++) {
+      const auto *nodes_spec = vec->Get(i);
+      _create_node(*manager, nodes_spec);
+      nodes_added.emplace(nodes_spec->name()->string_view());
     }
-  }
 
-  std::vector<std::string> order_to_construct;
-  std::vector<std::string> nodes_left = nodes.getMemberNames();
-  std::vector<std::string> orphan_nodes;
-  
-  while(nodes_left.size() > 0) {
-    orphan_nodes.clear();
-    // While there are noes left, iterate over them and see if we can add some
-    for(std::string name : nodes_left) {
-      Json::Value parents_value = nodes[name]["parents"];
-      if(parents_value.isObject()) {
-        bool all_parents_available = true;
-        for(Json::Value slot_name : parents_value.getMemberNames()) {
-          Json::Value parent = parents_value[slot_name.asString()];
-          if(already_added.count(parent.asString()) == 0) {
-            all_parents_available = false;
-            break;
-          }
+    ////////////////////////////////////////////////
+    /// Figure out the order to create the nodes of the tree.
+    std::vector<int> ordered_list;
+    std::list<int> to_sort(pipe_spec->nodes()->size());
+    std::set<std::string> node_names;
+    std::iota(to_sort.begin(), to_sort.end(), 0);
+
+    bool has_found_node = true;
+    while (!to_sort.empty() && has_found_node) {
+      has_found_node = false;
+      std::list<int> to_remove;
+      for (uint32_t i : to_sort) {
+        const fn_dag::node_spec *nodes_spec = pipe_spec->nodes()->Get(i);
+
+        // Check if contains all
+        if (std::all_of(
+                nodes_spec->wires()->cbegin(), nodes_spec->wires()->cend(),
+                [&manager,
+                 &node_names](const fn_dag::string_mapping *x) -> bool {
+                  return manager->manager_contains_id(x->value()->str()) ||
+                         node_names.contains(x->value()->str());
+                })) {
+          to_remove.push_back(i);
+          ordered_list.push_back(i);
+          has_found_node = true;
+          node_names.emplace(nodes_spec->name()->str());
         }
-        // all parents are available so let's construct it
-        if(all_parents_available) {
-          order_to_construct.push_back(name);
-          already_added.insert(name);
-        } else // ok it's an orphan on this pass.. maybe next time
-          orphan_nodes.push_back(name);
-      } else {
-        delete manager;
-        return nullptr;
       }
+      std::for_each(to_remove.begin(), to_remove.end(),
+                    [&to_sort](int i) { to_sort.remove(i); });
     }
-    if(nodes_left.size() == orphan_nodes.size()) {
-      // If they're all orphaned, this tree is unconstructable. 
-      delete manager;
-      return nullptr;
-    }
-    nodes_left.swap(orphan_nodes);
-  }
 
-  for(std::string name : order_to_construct) {
-    std::shared_ptr<fn_dag::module> lib_handle = __instantiate_from_library(nodes[name], library);
-    if(lib_handle != nullptr) {
-      Json::Value parents_value = nodes[name]["parents"];
-      for(Json::Value slot_name : parents_value.getMemberNames()) {
-        Json::Value parent = parents_value[slot_name.asString()];
-        std::string input_slot = slot_name.asString();
-        std::string parent_name = parent.asString();
-        manager->add_node(name, lib_handle->get_slot_handle_as_mapping(input_slot), parent_name);
-      }
-    }
+    ////////////////////////////////////////////////
+    /// Finally create the nodes of the tree
+    std::for_each(ordered_list.cbegin(), ordered_list.cend(),
+                  [&manager, &pipe_spec, this](const int i) {
+                    const fn_dag::node_spec *nodes_spec =
+                        pipe_spec->nodes()->Get(i);
+                    _create_node(*manager, nodes_spec);
+                  });
   }
 
   return manager;

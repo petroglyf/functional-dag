@@ -1,0 +1,43 @@
+// Example IDL file for our library_spec's schema.
+include "guid.fbs";
+
+namespace fn_dag;
+
+/// A library is a list of functions that instantiate node sources and transmission nodes. 
+enum NODE_TYPE:byte { SOURCE = 0, FILTER, SINK, UNDEFINED }
+enum OPTION_TYPE:byte { STRING = 0, INT, BOOL, UNDEFINED }
+enum PS_TYPE:byte { THREAD = 0, FORK }
+
+/// Basic types 
+table option_value {
+  type:OPTION_TYPE = UNDEFINED;
+  int_value:uint32;
+  bool_value:bool;
+  string_value:string;
+}
+
+table construction_option {
+  name:string (required);
+  value:option_value (required);
+}
+
+table string_mapping {
+  key:string (required);
+  value:string (required);
+}
+
+/// These are all that is needed for serializing and dserializing json
+table node_spec {
+  target_id:GUID_vals (required);
+  name:string (required);
+  residence:PS_TYPE;
+  wires:[string_mapping] (required);
+  options:[construction_option];
+}
+
+table pipe_spec {
+  sources:[node_spec] (required);
+  nodes:[node_spec] (required);
+}
+
+root_type pipe_spec;
