@@ -1,6 +1,6 @@
 #pragma once
 /** ---------------------------------------------
- *    ___                 .___  
+ *    ___                 .___
  *   |_  \              __| _/____     ____
  *    /   \    ______  / __ |\__  \   / ___\
  *   / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
@@ -10,89 +10,70 @@
  * @author ndepalma@alum.mit.edu
  */
 
-#include <string>
-#include <vector>
-#include <filesystem>
-#include <unordered_map>
-#include <functional_dag/dag_interface.hpp>
-#include <functional_dag/filter_sys.hpp>
 #include <functional_dag/dlpack.h>
 
+#include <filesystem>
+#include <functional_dag/dag_interface.hpp>
+#include <functional_dag/filter_sys.hpp>
+#include <functional_dag/guid_impl.hpp>
+#include <map>
+#include <string>
+#include <vector>
+
+#include "fb_gen/lib_spec_generated.h"
+
 using namespace std;
+using namespace fn_dag;
 namespace fs = std::filesystem;
 
-namespace fn_dag {
-  typedef enum {
-    SOURCE, FILTER, COMBINER, SINK, UNDEFINED
-  } MODULE_TYPE;
+using construction_signature = bool(dag_manager<std::string> &,
+                                    const node_spec &);
 
-  typedef fn_dag::dag_source<DLTensor> module_source;
-  typedef fn_dag::dag_node<DLTensor, DLTensor> module_transmit;
+/// This defines the options to a node, e.g. how to configure it
+typedef struct option_spec {
+  OPTION_TYPE type = OPTION_TYPE_UNDEFINED;
+  std::string name;
+  string option_prompt;
+  string short_description;
+} option_spec;
 
-  class module {
-  public:
-    module();
-    virtual ~module() = default;
+/// A node spec defines the basic properties of a node. A library is an array of
+/// nodes.
+typedef struct node_prop_spec node_prop_spec;
 
-    virtual MODULE_TYPE get_type();
-    virtual std::vector<std::string> const get_available_slots();
-    virtual module_source *get_handle_as_source();
-    virtual module_transmit *get_slot_handle_as_mapping(const std::string &_slot_name);
-  };
+typedef struct node_prop_spec {
+  GUID<node_prop_spec> guid;
+  NODE_TYPE module_type = NODE_TYPE::NODE_TYPE_UNDEFINED;
+  std::vector<option_spec> construction_types;
+} node_prop_spec;
 
-  class source_handler : public module {
-  public: 
-    source_handler(module_source *_handle);
-    ~source_handler();
+/// Library definition
+class library {
+ protected:
+  std::map<GUID<node_spec>, std::function<construction_signature>> constructors;
+  std::map<GUID<node_spec>, std::vector<option_spec>> options;
 
-    MODULE_TYPE get_type();
-    module_source *get_handle_as_source();
-  private:
-    module_source *handler;
-  };
+  void _create_node(dag_manager<std::string> &manager,
+                    const fn_dag::node_spec *spec);
 
-  class module_handler : public module {
-  public: 
-    module_handler(module_transmit *_handle);
-    ~module_handler();
+ public:
+  library() = default;
+  static bool preflight_lib(const fs::path _lib_path);
+  void load_lib(const fs::path _lib_path);
+  void load_all_available_libs(const fs::directory_entry &library_path);
 
-    MODULE_TYPE get_type();
-    module_transmit *get_slot_handle_as_mapping(const std::string &_slot_name);
-  private:
-    module_transmit *handler;
-  };
+  [[nodiscard]] dag_manager<std::string> *fsys_deserialize(
+      const std::string &json_in);
 
-  typedef enum {
-    STRING, INT, BOOL
-  } OPTION_TYPE;
+  static vector<fs::directory_entry> get_all_available_libs(
+      const fs::directory_entry &library_path);
+};
 
-  typedef struct {
-    OPTION_TYPE type;
-    union {
-      const char* string_value;
-      int32_t int_value;
-      bool bool_value;
-    } value;
-    uint32_t serial_id;
-    const char* option_prompt; 
-    const char* short_description;
-  } construction_option; 
+string fsys_serialize(const uint8_t *serialized_dag);
 
-  typedef vector<construction_option> lib_options;
+typedef struct library_spec {
+  GUID<library> guid;
+  std::vector<node_prop_spec> available_nodes;
+} library_spec;
 
-  typedef struct {
-    uint32_t lib_guid;
-    string name;
-    string parent_name;
-    bool is_source;
-    lib_options instantiation_options;
-  } library_spec;
-
-  using instantiate_fn = std::function<shared_ptr<module>(const lib_options * const)>;
-}
-
-std::string fsys_serialize(const vector<fn_dag::library_spec> * const);
-fn_dag::dag_manager<std::string> *fsys_deserialize(const std::string &json_in, const std::unordered_map<uint32_t, fn_dag::instantiate_fn> &library);
-
-bool preflight_lib(const fs::path _lib_path);
-shared_ptr< vector<fs::directory_entry> > get_all_available_libs(const fs::directory_entry &library_path);
+using get_library_fn_type = library_spec();

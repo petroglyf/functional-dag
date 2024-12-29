@@ -1,0 +1,6 @@
+namespace fn_dag;
+
+struct GUID_vals {
+  bits1:uint64;
+  bits2:uint64;
+}

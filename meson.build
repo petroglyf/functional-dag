@@ -9,6 +9,7 @@ project(
     ],
     version: '0.5',
     license: 'MIT',
+    meson_version : '>= 1.1',
     license_files: 'LICENSE',
 )
 
@@ -36,11 +37,33 @@ fs_dep = import('fs')
 ########################################
 ####### Building specification #########
 ########################################
+libspec_gen_h = custom_target(
+    'lib_spec_generated.h',
+    output : 'lib_spec_generated.h',
+    input : 'schemas/lib_spec.fbs',
+    command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
+)
+
+libspec_bfbs = custom_target(
+    'lib_spec_schema',
+    output : 'lib_spec.bfbs',
+    input : 'schemas/lib_spec.fbs',
+    command : ['flatc', '--bfbs-gen-embed', '--schema', '-b', '@INPUT@'],
+)
+
+guid_gen_h = custom_target(
+    'guid_generated.h',
+    output : 'guid_generated.h',
+    input : 'schemas/guid.fbs',
+    command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
+)
+
 functional_dag_lib = shared_library(
     'functional_dag',
-    ['src/functional_dag/libutils.cpp'],
+    ['src/functional_dag/libutils.cpp', libspec_gen_h, guid_gen_h, libspec_bfbs],
+    cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
     include_directories: ['include/'],
-    dependencies: jsoncpp_dep,
+    dependencies: [jsoncpp_dep, flatbuffers_dep],
     install: true,
     install_dir: shared_lib_dir,
 )
@@ -50,19 +73,30 @@ functional_dag_lib = shared_library(
 ########################################
 dag_tests = executable(
     'dag_tests',
-    'test/functional_dag/dag_tests.cpp',
+    ['test/functional_dag/dag_tests.cpp', libspec_gen_h, guid_gen_h],
     include_directories: ['include/'],
-    dependencies: [catch_dep],
+    dependencies: [catch_dep, flatbuffers_dep],
 )
 lib_tests = executable(
     'lib_tests',
     'test/functional_dag/lib_tests.cpp',
     include_directories: ['include/'],
-    dependencies: [jsoncpp_dep, catch_dep],
+    dependencies: [catch_dep, flatbuffers_dep],
+    cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
     link_with: [functional_dag_lib],
 )
+
+guid_tests = executable(
+    'guid_tests',
+    'test/functional_dag/guid_tests.cpp',
+    include_directories: ['include/'],
+    dependencies: [catch_dep, flatbuffers_dep],
+    link_with: [functional_dag_lib],
+)
+
 test('dag_tests', dag_tests)
-# test('lib_tests', lib_tests)
+test('lib_tests', lib_tests)
+test('guid_tests', guid_tests)
 
 ########################################
 ####### Lint command (optional) ########
