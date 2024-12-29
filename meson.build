@@ -2,8 +2,8 @@ project(
     'functional-dag',
     'cpp',
     default_options: [
-        'c_std=c20',
-        'cpp_std=c++20',
+        'c_std=c23',
+        'cpp_std=c++23',
         'warning_level=3',
         'werror=true',
     ],
@@ -38,7 +38,7 @@ fs_dep = import('fs')
 ####### Building specification #########
 ########################################
 libspec_gen_h = custom_target(
-    'lib_spec_generated.h',
+    'lib_spec_generate',
     output : 'lib_spec_generated.h',
     input : 'flatbufs/lib_spec.fbs',
     command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
@@ -52,18 +52,27 @@ libspec_bfbs = custom_target(
 )
 
 guid_gen_h = custom_target(
-    'guid_generated.h',
+    'guid_generate',
     output : 'guid_generated.h',
     input : 'flatbufs/guid.fbs',
     command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
 )
 
+error_codes_h = custom_target(
+    'error_codes_generate',
+    output : 'error_codes.h',
+    input : 'flatbufs/error_codes.fbs',
+    command : ['flatc', '--reflect-types', '-o', 'include/functional_dag/', '--no-prefix', '--filename-suffix', '', '--cpp', '@INPUT@'],
+)
+
+error_codes_dep = declare_dependency (sources: error_codes_h)
+
 functional_dag_lib = shared_library(
     'functional_dag',
-    ['src/functional_dag/libutils.cpp', libspec_gen_h, guid_gen_h, libspec_bfbs],
-    cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
+    ['src/functional_dag/libutils.cpp', libspec_gen_h, guid_gen_h, libspec_bfbs, error_codes_h],
+    cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()],
     include_directories: ['include/'],
-    dependencies: [jsoncpp_dep, flatbuffers_dep],
+    dependencies: [jsoncpp_dep, flatbuffers_dep, error_codes_dep],
     install: true,
     install_dir: shared_lib_dir,
 )
@@ -75,13 +84,13 @@ dag_tests = executable(
     'dag_tests',
     ['test/functional_dag/dag_tests.cpp', libspec_gen_h, guid_gen_h],
     include_directories: ['include/'],
-    dependencies: [catch_dep, flatbuffers_dep],
+    dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
 )
 lib_tests = executable(
     'lib_tests',
     'test/functional_dag/lib_tests.cpp',
     include_directories: ['include/'],
-    dependencies: [catch_dep, flatbuffers_dep],
+    dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
     cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
     link_with: [functional_dag_lib],
 )
@@ -90,7 +99,7 @@ guid_tests = executable(
     'guid_tests',
     'test/functional_dag/guid_tests.cpp',
     include_directories: ['include/'],
-    dependencies: [catch_dep, flatbuffers_dep],
+    dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
     link_with: [functional_dag_lib],
 )
 

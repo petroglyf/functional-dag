@@ -1,29 +1,27 @@
 #include <catch2/catch_test_macros.hpp>
 #include <chrono>
 #include <functional_dag/fn_dag_interface.hpp>
-#include <random>
+#include <memory>
 #include <sstream>
 #include <thread>
 
+#include "functional_dag/dag_interface.hpp"
 #include "functional_dag/filter_sys.hpp"
 
 TEST_CASE("Fill an array in order", "[dag.single_thread]") {
   int array[] = {0, 0, 0, 0, 0};
   int ran_times = 0;
 
-  fn_dag::dag_manager<uint64_t> manager;
+  fn_dag::dag_manager<uint16_t> manager;
   manager.run_single_threaded(true);
 
-  for (uint64_t i = 0; i < 5; i++) {
-    std::function<int *()> fn = [&array, i, &ran_times]() {
+  for (uint16_t i = 0; i < 5; i++) {
+    std::function<std::unique_ptr<int>()> fn = [&array, i, &ran_times]() {
       *(array + i) = i + 1;
       ran_times++;
-      int *int_out = new int;
-      *int_out = *(array + i);
-      return int_out;
+      return std::make_unique<int>(*(array + i));
     };
-
-    manager.add_dag(i, fn_dag::fn_source(fn), false);
+    REQUIRE(manager.add_dag(i, fn_dag::fn_source<int>(fn), false));
   }
 
   for (auto dag : manager.m_all_dags) {
@@ -46,8 +44,8 @@ TEST_CASE("Fill an array out of order", "[dag.multithread]") {
   fn_dag::dag_manager<uint64_t> manager;
 
   for (uint64_t i = 0; i < 5; i++) {
-    std::function<int *()> fn = [&array_out, i, &run_order,
-                                 &array_run_order]() {
+    std::function<std::unique_ptr<int>()> fn = [&array_out, i, &run_order,
+                                                &array_run_order]() {
       if (*(array_run_order + i) == 0) {
         int hundreds_of_ms = rand() % 36;
         int ms = hundreds_of_ms * 100;
@@ -58,7 +56,7 @@ TEST_CASE("Fill an array out of order", "[dag.multithread]") {
       return nullptr;
     };
 
-    manager.add_dag(i, fn_dag::fn_source(fn), false);
+    REQUIRE(manager.add_dag(i, fn_dag::fn_source<int>(fn), false));
   }
 
   manager.print_all_dags();
@@ -86,24 +84,23 @@ TEST_CASE("Use a fanout, check all 5 received", "[dag.fanout]") {
   int rand_int = -1;
   fn_dag::dag_manager<int> manager;
 
-  std::function<int *()> fn = [&rand_int]() {
+  std::function<std::unique_ptr<int>()> fn = [&rand_int]() {
     rand_int = rand() % 10;
-    int *pass_int = new int;
-    *pass_int = rand_int;
-    return pass_int;
+    return std::make_unique<int>(rand_int);
   };
 
-  manager.add_dag(0, fn_dag::fn_source(fn), false);
+  REQUIRE(manager.add_dag(0, fn_dag::fn_source(fn), false));
 
   for (int i = 0; i < 5; i++) {
-    std::function<int *(const int *)> fn_c = [&array,
-                                              i](const int *rand_int_in) {
-      *(array + i) = *rand_int_in;
-      return nullptr;
-    };
+    std::function<std::unique_ptr<int>(const int *const)> fn_c =
+        [&array, i](const int *const rand_int_in) {
+          *(array + i) = *rand_int_in;
+          return nullptr;
+        };
 
-    manager.add_node(i + 1, fn_dag::fn_call(fn_c), 0);
+    REQUIRE(manager.add_node(i + 1, fn_dag::fn_call(fn_c), 0));
   }
+  REQUIRE(manager.m_all_dags.size() == 1);
   manager.print_all_dags();
   for (auto dag : manager.m_all_dags) {
     dag->push_once();
@@ -121,35 +118,33 @@ TEST_CASE("Use a fanout, check all 5 received", "[dag.fanout]") {
 TEST_CASE("Simple accumulate", "[dag.accumulate]") {
   fn_dag::dag_manager<int> manager;
 
-  std::function<int *()> fn = []() {
-    int *pass_int = new int;
-    *pass_int = 1;
-    return pass_int;
+  std::function<std::unique_ptr<int>()> fn = []() {
+    return std::make_unique<int>(1);
   };
 
-  manager.add_dag(0, fn_dag::fn_source(fn), false);
+  REQUIRE(manager.add_dag(0, fn_dag::fn_source(fn), false));
 
   for (int i = 0; i < 9; i++) {
-    std::function<int *(const int *)> fn_c = [](const int *int_in) {
-      int *pass_int = new int;
-      *pass_int = *int_in + 1;
-      return pass_int;
-    };
+    std::function<std::unique_ptr<int>(const int *const)> fn_c =
+        [](const int *const int_in) {
+          return std::make_unique<int>(*int_in + 1);
+        };
 
-    manager.add_node(i + 1, fn_dag::fn_call(fn_c), i);
+    REQUIRE(manager.add_node(i + 1, fn_dag::fn_call(fn_c), i));
   }
 
   int final_value;
-  std::function<int *(const int *)> fn_last =
-      [&final_value](const int *int_in) {
+  std::function<std::unique_ptr<int>(const int *const)> fn_last =
+      [&final_value](const int *const int_in) {
         final_value = *int_in;
         return nullptr;
       };
-  manager.add_node(10, fn_dag::fn_call(fn_last), 9);
+  REQUIRE(manager.add_node(10, fn_dag::fn_call(fn_last), 9));
+
   manager.print_all_dags();
   for (auto dag : manager.m_all_dags) dag->push_once();
 
-  std::this_thread::sleep_for(std::chrono::milliseconds(1000));
+  std::this_thread::sleep_for(std::chrono::milliseconds(200));
   manager.stahp();
 
   REQUIRE(final_value == 10);
@@ -158,22 +153,18 @@ TEST_CASE("Simple accumulate", "[dag.accumulate]") {
 TEST_CASE("Print the dag and check results", "[dag.print]") {
   fn_dag::dag_manager<int> manager;
 
-  std::function<int *()> fn = []() {
-    int *pass_int = new int;
-    *pass_int = 1;
-    return pass_int;
+  std::function<std::unique_ptr<int>()> fn = []() {
+    return std::make_unique<int>(1);
   };
 
-  manager.add_dag(0, fn_dag::fn_source(fn), false);
+  REQUIRE(manager.add_dag(0, fn_dag::fn_source(fn), false));
 
   for (int i = 0; i < 9; i++) {
-    std::function<int *(const int *)> fn_c = [](const int *int_in) {
-      int *pass_int = new int;
-      *pass_int = *int_in + 1;
-      return pass_int;
-    };
-
-    manager.add_node(i + 1, fn_dag::fn_call(fn_c), i);
+    std::function<std::unique_ptr<int>(const int *const)> fn_c =
+        [](const int *const int_in) {
+          return std::make_unique<int>(*int_in + 1);
+        };
+    REQUIRE(manager.add_node(i + 1, fn_dag::fn_call(fn_c), i));
   }
   std::stringstream output_stream;
   manager.set_logging_stream(&output_stream);
@@ -184,4 +175,39 @@ TEST_CASE("Print the dag and check results", "[dag.print]") {
 
   // 10 nodes, 2 header+footer, 1 extra
   REQUIRE(num_newlines == 10 + 2 + 1);
+}
+
+TEST_CASE("Check that errors are thrown for null pointer nodes",
+          "[dag.null_nodes]") {
+  fn_dag::dag_manager<int> manager;
+
+  auto result = manager.add_dag(0, (fn_dag::dag_source<int> *)nullptr, false);
+  REQUIRE_FALSE(result);
+  REQUIRE(result.error() == fn_dag::error_codes::NULL_PTR_ERROR);
+
+  auto result2 = manager.add_node(1, (fn_dag::dag_node<int, int> *)nullptr, 0);
+  REQUIRE_FALSE(result2);
+  REQUIRE(result2.error() == fn_dag::error_codes::NULL_PTR_ERROR);
+}
+
+TEST_CASE("Check that errors are thrown for not found parents",
+          "[dag.missing_parents]") {
+  fn_dag::dag_manager<int> manager;
+
+  std::function<std::unique_ptr<int>()> fn = []() {
+    return std::make_unique<int>(1);
+  };
+
+  std::function<std::unique_ptr<int>(const int *const)> fn_node =
+      [](const int *const) { return std::make_unique<int>(1); };
+
+  REQUIRE(manager.add_dag(0, fn_dag::fn_source(fn), false));
+
+  auto result = manager.add_node(1, (fn_dag::dag_node<int, int> *)nullptr, 6);
+  REQUIRE_FALSE(result);
+  REQUIRE(result.error() == fn_dag::error_codes::NULL_PTR_ERROR);
+
+  auto result2 = manager.add_node(1, fn_dag::fn_call(fn_node), 6);
+  REQUIRE_FALSE(result2);
+  REQUIRE(result2.error() == fn_dag::error_codes::PARENT_NOT_FOUND);
 }

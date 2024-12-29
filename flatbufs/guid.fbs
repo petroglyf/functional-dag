@@ -1,3 +1,4 @@
+// IDL file for GUID internal structure.
 namespace fn_dag;
 
 struct GUID_vals {

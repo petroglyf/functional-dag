@@ -14,17 +14,19 @@
 #include <functional_dag/dag_interface.hpp>
 
 namespace fn_dag {
+using namespace std;
 /** Internal structure to support a generator function
  */
 template <typename Out>
 class __dag_source : public dag_source<Out> {
  public:
-  std::function<Out *()> m_generator;  // Generator lambda function
+  function<unique_ptr<Out>()> m_generator;  // Generator lambda function
 
   /** Default constructor
    * @param _generator A lambda function to call repeatedly.
    */
-  __dag_source(std::function<Out *()> _generator) : m_generator(_generator) {}
+  __dag_source(function<unique_ptr<Out>()> _generator)
+      : m_generator(_generator) {}
 
   /** Default deconstructor */
   ~__dag_source() {}
@@ -32,7 +34,7 @@ class __dag_source : public dag_source<Out> {
   /** Overloaded function to call the generator function.
    * @return Output data from the lambda function
    */
-  Out *update() { return m_generator(); };
+  unique_ptr<Out> update() { return m_generator(); };
 };
 
 /** Internal structure to support a mapping function
@@ -40,12 +42,14 @@ class __dag_source : public dag_source<Out> {
 template <typename In, typename Out>
 class __dag_node : public dag_node<In, Out> {
  public:
-  std::function<Out *(const In *)> m_update;  // Mapping lambda function
+  function<unique_ptr<Out>(const In *const)>
+      m_update;  // Mapping lambda function
 
   /** Default constructor
    * @param _update A lambda function to call repeatedly on input data
    */
-  __dag_node(std::function<Out *(const In *)> _update) : m_update(_update) {}
+  __dag_node(function<unique_ptr<Out>(const In *const)> _update)
+      : m_update(_update) {}
 
   /** Default deconstructor */
   ~__dag_node() {}
@@ -54,7 +58,7 @@ class __dag_node : public dag_node<In, Out> {
    * @param _data Input data to the lambda function
    * @return Output data from the lambda function
    */
-  Out *update(const In *_data) { return m_update(_data); };
+  unique_ptr<Out> update(const In *const _data) { return m_update(_data); };
 };
 
 /** A wrapper function that constructs a generator wrapper for your generator
@@ -68,7 +72,7 @@ class __dag_node : public dag_node<In, Out> {
  * @return A wrapped, compatible, source node for the dag tree.
  */
 template <typename Out>
-dag_source<Out> *fn_source(std::function<Out *()> _run_fn) {
+dag_source<Out> *fn_source(function<unique_ptr<Out>()> _run_fn) {
   return new __dag_source(_run_fn);
 }
 
@@ -84,7 +88,7 @@ dag_source<Out> *fn_source(std::function<Out *()> _run_fn) {
  * @return A wrapped, compatible, dag node for the dag tree.
  */
 template <typename In, typename Out>
-dag_node<In, Out> *fn_call(std::function<Out *(const In *)> _run_fn) {
+dag_node<In, Out> *fn_call(function<unique_ptr<Out>(const In *const)> _run_fn) {
   return new __dag_node(_run_fn);
 }
 

@@ -1,0 +1,37 @@
+// IDL file for error codes.
+namespace fn_dag;
+
+/// Error codes used by the functional dag
+enum error_codes : uint16 {
+  PARENT_NOT_FOUND = 0,    
+  ///< The parent of the node you are attaching to the dag was not found. 
+  NULL_PTR_ERROR,          
+  ///< The node you are trying to add is null.
+  NOT_ENOUGH_ELEMENTS,     
+  ///< Not enough UUID elements to parse.
+  HEX_SIZE_INCORRECT,      
+  ///< A section of the UUID isn't long enough.
+  DAG_NOT_FOUND,           
+  ///< When deserializing, the required dag wasn't found.
+  CONSTRUCTION_FAILED,     
+  ///< Constructing the node when deserializing failed.
+  NO_DETAILS,              
+  ///< The lib that was loaded did not include details.
+  NO_CONSTRUCTOR,          
+  ///< The lib that was loaded has no constructor function.
+  PATH_DOES_NOT_EXIST,     
+  ///< The path requested for the load or library was not found.
+  GUID_CONSTRUCTION_FAILED,
+  ///< When the GUID was being constructed, something went wrong.
+  SCHEMA_READ_ERROR,       
+  ///< This is catastrophic. It means an embedded string was incorrect.
+  SERIALIZATION_ERROR,    
+  ///< When trying to serialize a dag to JSON, something failed in serializer.
+  JSON_PARSER_ERROR,      
+  ///< When trying to read a JSON specification, the JSON was malformed. 
+  PIPE_SPEC_ERROR,        
+  ///< This shouldn't happen. It means the JSON loaded but did not conform to DAG structure.
+  MODULE_TYPE_UNSUPPORTED, 
+  ///< This means the library is trying to load a node that isn't yet supported. 
+  UNUSED,
+}

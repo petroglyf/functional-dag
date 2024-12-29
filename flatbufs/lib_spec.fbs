@@ -1,4 +1,4 @@
-// Example IDL file for our library_spec's schema.
+// Example IDL file for the library_spec's schema.
 include "guid.fbs";
 
 namespace fn_dag;

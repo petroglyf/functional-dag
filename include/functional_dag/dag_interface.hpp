@@ -9,8 +9,10 @@
  * ---------------------------------------------
  * @author ndepalma@alum.mit.edu
  */
+#include <memory>
 
 namespace fn_dag {
+using namespace std;
 /** Interface for all external generator lambdas
  *
  * All user functions must implement the update() function that returns a given
@@ -26,7 +28,7 @@ class dag_source {
   /** Generator function to implement by the user.
    * @return New data that was just generated
    */
-  virtual Out *update() = 0;
+  virtual unique_ptr<Out> update() = 0;
 };
 
 /** Interface for all external "mapping" lambdas
@@ -51,6 +53,6 @@ class dag_node {
    * @param _data The data to use to generate the output data
    * @return Data out, just allocated on the heap with *new*.
    */
-  virtual Out *update(const In *_data) = 0;
+  virtual unique_ptr<Out> update(const In* const _data) = 0;
 };
 }  // namespace fn_dag
