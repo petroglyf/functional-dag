@@ -40,21 +40,21 @@ fs_dep = import('fs')
 libspec_gen_h = custom_target(
     'lib_spec_generated.h',
     output : 'lib_spec_generated.h',
-    input : 'schemas/lib_spec.fbs',
+    input : 'flatbufs/lib_spec.fbs',
     command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
 )
 
 libspec_bfbs = custom_target(
     'lib_spec_schema',
     output : 'lib_spec.bfbs',
-    input : 'schemas/lib_spec.fbs',
+    input : 'flatbufs/lib_spec.fbs',
     command : ['flatc', '--bfbs-gen-embed', '--schema', '-b', '@INPUT@'],
 )
 
 guid_gen_h = custom_target(
     'guid_generated.h',
     output : 'guid_generated.h',
-    input : 'schemas/guid.fbs',
+    input : 'flatbufs/guid.fbs',
     command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
 )
 
