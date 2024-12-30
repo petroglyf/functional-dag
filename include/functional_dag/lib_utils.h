@@ -10,8 +10,6 @@
  * @author ndepalma@alum.mit.edu
  */
 
-#include <functional_dag/dlpack.h>
-
 #include <filesystem>
 #include <functional_dag/dag_interface.hpp>
 #include <functional_dag/filter_sys.hpp>
@@ -38,8 +36,6 @@ typedef struct option_spec {
 
 /// A node spec defines the basic properties of a node. A library is an array of
 /// nodes.
-typedef struct node_prop_spec node_prop_spec;
-
 typedef struct node_prop_spec {
   GUID<node_prop_spec> guid;
   NODE_TYPE module_type = NODE_TYPE::NODE_TYPE_UNDEFINED;

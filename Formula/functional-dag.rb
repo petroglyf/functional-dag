@@ -1,9 +1,9 @@
 class FunctionalDag < Formula
   desc "This library is used for building functional dags."
   homepage "https://github.com/petrogly-ph/functional-dag"
-  url "https://github.com/petrogly-ph/functional-dag/archive/refs/tags/brew-v0.5.tar.gz"
+  url "https://github.com/petrogly-ph/functional-dag/archive/refs/tags/brew-v1.0rc1.tar.gz"
   license "MIT"
-  version "0.5"
+  version "1.0rc1"
   #sha256 "284fa1af92093a4c4660bbc7954e6854bf485c20f5ba85f8b5f73d0a1a7387f72"
 
   # Don't yet support bottles! 

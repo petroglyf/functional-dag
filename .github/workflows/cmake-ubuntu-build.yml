@@ -31,9 +31,11 @@ jobs:
             c_compiler: gcc
             cpp_compiler: g++
             is_arm: false
-        ## this is being deprecated because noble cross compiling
-        ## cpp_compiler:  aarch64-linux-gnu-g++
-        ## is_arm: true
+          #- os: ubuntu-24.04
+            #c_compiler: aarch64-linux-gnu-gcc
+            # this is being deprecated because noble cross compiling
+            #cpp_compiler:  aarch64-linux-gnu-g++
+            #is_arm: true
         exclude:
           - os: ubuntu-24.04
             c_compiler: cl
@@ -58,24 +60,25 @@ jobs:
       run: |
         ! ${{ matrix.is_arm }} && echo "Is x86, skipping" && exit;
 
-        sudo echo "" >> source-mod.list
         sudo echo "# ARM64 support" >> source-mod.list
         sudo echo "Types: deb" >> source-mod.list
         sudo echo "URIs: http://ports.ubuntu.com/ubuntu-ports/" >> source-mod.list
         sudo echo "Suites: noble noble-updates noble-backports" >> source-mod.list
         sudo echo "Components: main universe restricted multiverse" >> source-mod.list
         sudo echo "Signed-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg" >> source-mod.list
-        sudo echo "SOURCEMODS"
+        sudo echo "Architectures: arm64" >> source-mod.list
+        sudo echo "" >> source-mod.list
         sudo cat source-mod.list
-        sudo mv source-mod.list /etc/apt/sources.list.d/arm-cross-compile-sources.list
+        sudo mv source-mod.list /etc/apt/sources.list.d/arm-cross-compile.sources
         
+        sudo dpkg --add-architecture arm64
         sudo apt update
-        sudo apt-get install -y pkg-config catch2 libjsoncpp-dev:arm64 meson
-        sudo apt-get install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-aarch64-linux-gnu
+        sudo apt install -y pkg-config catch2 meson libflatbuffers-dev:arm64
+        sudo apt install -y gcc-aarch64-linux-gnu binutils-aarch64-linux-gnu g++-aarch64-linux-gnu
     - name: Install dependencies if x86-64
       run: |
         ${{ matrix.is_arm }} && echo "Is ARM, skipping" && exit; 
-        sudo apt-get install -y pkg-config catch2 libjsoncpp-dev meson libflatbuffers-dev
+        sudo apt install -y pkg-config catch2 meson libflatbuffers-dev
     - name: Configure Meson
       # Configure Meson in a 'build' subdirectory. 
       run: |
