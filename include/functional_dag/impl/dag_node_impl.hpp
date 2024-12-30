@@ -11,11 +11,8 @@
  * @author ndepalma@alum.mit.edu
  */
 
-#include <condition_variable>
 #include <iostream>
-#include <mutex>
 #include <string>
-#include <thread>
 
 #include "functional_dag/core/dag_utils.hpp"
 #include "functional_dag/dag_interface.hpp"
@@ -40,11 +37,11 @@ class _abstract_internal_dag_node {
   virtual ~_abstract_internal_dag_node() = default;
   /** Must provide a way to get an ID. Could be string or int or something
    * efficient. */
-  virtual IDType get_id() = 0;
+  virtual const IDType &get_id() = 0;
   /** Must provide a way to call the function */
-  virtual void run_filter(const Type *_data) = 0;
+  virtual void run_filter(const Type *const _data) = 0;
   /** Must provide a way to print some diagnostics to screen. */
-  virtual void print(string _plus) = 0;
+  virtual void print(const string &_plus) = 0;
 };
 
 /** An internal class to encapsulate a function that transmutes input data to
@@ -94,10 +91,10 @@ class _internal_dag_node : public _abstract_internal_dag_node<In, IDType> {
    *
    * @param _data Input data to process by the node.
    */
-  void run_filter(const In *_data) {
-    Out *data_out = m_node_hook->update(_data);
+  void run_filter(const In *const _data) {
+    unique_ptr<Out> data_out = m_node_hook->update(_data);
     if (!g_context.filter_off && data_out != nullptr)
-      m_child->fan_out(data_out);
+      m_child->fan_out(std::move(data_out));
   }
 
   /** Print function
@@ -106,8 +103,8 @@ class _internal_dag_node : public _abstract_internal_dag_node<In, IDType> {
    *
    * @param _indent_str How to indent the children
    */
-  void print(string _indent_str) {
-    *g_context.log << m_node_id << std::endl;
+  void print(const string &_indent_str) {
+    *g_context.log << m_node_id << endl;
     m_child->print(_indent_str);
   }
 
@@ -117,6 +114,6 @@ class _internal_dag_node : public _abstract_internal_dag_node<In, IDType> {
    *
    * @return ID of the node
    */
-  IDType get_id() { return m_node_id; }
+  const IDType &get_id() { return m_node_id; }
 };
 }  // namespace fn_dag

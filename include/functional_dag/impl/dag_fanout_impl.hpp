@@ -11,15 +11,18 @@
  * @author ndepalma@alum.mit.edu
  */
 
+#include <functional_dag/error_codes.h>
+
+#include <expected>
 #include <functional_dag/core/dag_utils.hpp>
 #include <functional_dag/impl/dag_node_impl.hpp>
-#include <future>
-#include <iostream>
-#include <string>
 #include <thread>
 #include <vector>
 
+#include "include/functional_dag/error_codes.h"
+
 namespace fn_dag {
+using namespace std;
 
 /** Internal node to take data from parent and run children.
  *
@@ -37,7 +40,7 @@ class dag_fanout_node {
    * This is an internal function for adding subsequent nodes
    * @param _new_node The node to add to the children
    */
-  void add_node(_abstract_internal_dag_node<Type, IDType> *_new_node) {
+  void _add_node(_abstract_internal_dag_node<Type, IDType> *_new_node) {
     m_children.push_back(_new_node);
   }
 
@@ -53,13 +56,14 @@ class dag_fanout_node {
   */
   dag_fanout_node(const _dag_context &_context)
       : g_context(_context), m_children() {}
+
   /** Standard deconstructor */
   ~dag_fanout_node() {
     for (auto internal_dag : m_children) delete internal_dag;
     m_children.clear();
   }
 
-  /** Function to do it's job
+  /** Function to move data through the graph.
    *
    * This function will take data from the parent node and execute
    * the subsequent functions with the data. After the subsequent
@@ -70,21 +74,20 @@ class dag_fanout_node {
    *
    * @param _data Data from the parent node
    */
-  void fan_out(Type *_data) {
+  void fan_out(unique_ptr<Type> _data) {
+    if (_data.get() == nullptr) return;
     if (!g_context.run_single_threaded) {
-      std::vector<thread> child_threads;
+      vector<thread> child_threads;
 
       for (auto it : m_children)
         child_threads.push_back(thread(
             &fn_dag::_abstract_internal_dag_node<Type, IDType>::run_filter, it,
-            std::ref(_data)));
+            _data.get()));
 
       for (uint32_t i = 0; i < child_threads.size(); i++)
         child_threads[i].join();
     } else
-      for (auto it : m_children) it->run_filter(_data);
-
-    delete _data;
+      for (auto it : m_children) it->run_filter(_data.get());
   }
 
   /** Printing function
@@ -94,11 +97,12 @@ class dag_fanout_node {
    *
    * @param _indent The parents indent context
    */
-  void print(string _indent) {
-    string plus = _indent + g_context.indent_str;
-    for (auto child : m_children) {
+  void print(const string &_indent) {
+    const string next_indent = _indent + string(g_context.indent_str);
+
+    for (const auto child : m_children) {
       *g_context.log << _indent << "->";
-      child->print(plus);
+      child->print(next_indent);
     }
   }
 
@@ -113,14 +117,16 @@ class dag_fanout_node {
    * @param _node_to_add The node to add
    * @param _onto The ID of the parent the node wants to attach to
    * @param _parent_id The current ID of this nodes parent
-   * @return True if it was attached to the graph. Otherwise false.
+   * @return The parent ID if successfully added. Otherwise it returns an error
+   * code.
    */
   template <typename In, typename Out>
-  bool add_node_to_subdag(_internal_dag_node<In, Out, IDType> *_node_to_add,
-                          const IDType _onto, const IDType _parent_id) {
+  [[nodiscard]] expected<IDType, error_codes> add_node_to_subdag(
+      _internal_dag_node<In, Out, IDType> *_node_to_add, const IDType _onto,
+      const IDType _parent_id) {
     if (_onto == _parent_id) {
-      add_node((_abstract_internal_dag_node<In, IDType> *)_node_to_add);
-      return true;
+      _add_node((_abstract_internal_dag_node<In, IDType> *)_node_to_add);
+      return _parent_id;
     } else {
       for (auto child = m_children.cbegin(); child != m_children.cend();
            child++) {
@@ -128,13 +134,15 @@ class dag_fanout_node {
             static_cast<_internal_dag_node<In, Type, IDType> *>(*child);
         fn_dag::dag_fanout_node<Type, IDType> *fanout_node =
             internal_child->m_child;
-        if (fanout_node->add_node_to_subdag(_node_to_add, _onto,
-                                            (*child)->get_id()))
-          return true;
+        if (auto p = fanout_node->add_node_to_subdag(_node_to_add, _onto,
+                                                     (*child)->get_id());
+            p.has_value())
+          return p.value();
       }
     }
 
-    return false;
+    return unexpected(error_codes::PARENT_NOT_FOUND);
+    ;
   }
 };
 }  // namespace fn_dag

@@ -9,16 +9,17 @@
  * ---------------------------------------------
  * @author ndepalma@alum.mit.edu
  */
+#include <functional_dag/error_codes.h>
 
+#include <expected>
 #include <iostream>
-#include <map>
 #include <unordered_set>
-#include <vector>
 
 #include "functional_dag/dag_interface.hpp"
 #include "functional_dag/impl/dag_fanout_impl.hpp"
 
 namespace fn_dag {
+using namespace std;
 
 /** Abstract pure virtual class for all DAGs
  *
@@ -34,7 +35,7 @@ class _dag_base {
   /** Check to see if the DAG contains a specific ID
    * @return Returns true if the dag contains the ID
    */
-  virtual bool dag_contains(IDType _id) = 0;
+  virtual bool dag_contains(const IDType &_id) = 0;
 
   /** Simple print statement that recursively prints the nodes. */
   virtual void print() = 0;
@@ -42,7 +43,7 @@ class _dag_base {
   /** Gets the ID of the DAG itself
    * @return The ID of the DAG itself
    */
-  virtual IDType get_id() = 0;
+  virtual const IDType &get_id() = 0;
 
   /** Calls the source generator data and propagates it across the DAG once. */
   virtual void push_once() = 0;
@@ -82,14 +83,14 @@ class dag : public _dag_base<IDType> {
    * @param _startThread Whether or not to autostart calling the generator
    * function
    */
-  dag(IDType _id, dag_source<OriginType> *_lsource,
+  dag(const IDType &_id, dag_source<OriginType> *_lsource,
       const _dag_context &_context, bool _startThread)
       : m_id(_id),
         m_source(_lsource),
         m_children(_context),
         m_children_ids(),
         g_context(_context) {
-    if (_startThread) m_thread = std::thread(&dag::start_source, this);
+    if (_startThread) m_thread = thread(&dag::start_source, this);
   }
 
   /** Default deconstructor. Waits for children to stop before cleaning up. */
@@ -104,7 +105,7 @@ class dag : public _dag_base<IDType> {
    *
    * @return ID of the DAG
    */
-  IDType get_id() { return m_id; }
+  const IDType &get_id() { return m_id; }
 
   /** Manually pumps some data across the children of the DAG
    *
@@ -113,7 +114,9 @@ class dag : public _dag_base<IDType> {
    *
    * @param _raw_dat The raw data that the user provides.
    */
-  void manual_pump(OriginType *_raw_dat) { m_children.fan_out(_raw_dat); }
+  void manual_pump(const unique_ptr<OriginType> _raw_dat) {
+    m_children.fan_out(_raw_dat);
+  }
 
   /** Checks whether this DAG contains a specific ID
    *
@@ -123,7 +126,7 @@ class dag : public _dag_base<IDType> {
    * @param _id The ID to lookup
    * @return Whether or not the DAG contains the ID.
    */
-  bool dag_contains(IDType _id) { return m_children_ids.count(_id) > 0; }
+  bool dag_contains(const IDType &_id) { return m_children_ids.count(_id) > 0; }
 
   /** Adds a new function to the DAG.
    *
@@ -134,21 +137,27 @@ class dag : public _dag_base<IDType> {
    * @param _newID The ID of the new function
    * @param _new_filter The mapping function itself to pass along
    * @param _on_node The ID of the parent to attach the function to.
+   * @return A parent ID if successfully added to the dag. Otherwise an error
+   * code.
    */
   template <typename In, typename Out>
-  void add_filter(IDType _newID, dag_node<In, Out> *_new_filter,
-                  IDType _on_node) {
+  [[nodiscard]] expected<IDType, error_codes> add_filter(
+      IDType _newID, dag_node<In, Out> *_new_filter, IDType _on_node) {
     _internal_dag_node<In, Out, IDType> *new_node;
     new_node =
         new _internal_dag_node<In, Out, IDType>(_newID, _new_filter, g_context);
     m_children_ids.insert(_newID);
-    m_children.add_node_to_subdag(new_node, _on_node, m_id);
+    auto res = m_children.add_node_to_subdag(new_node, _on_node, m_id);
+    if (!res) {
+      delete new_node;
+    }
+    return res;
   }
 
   /** Simple print function to print the ID of this DAG and it's children. */
   void print() {
-    *g_context.log << "->" << m_id << std::endl;
-    m_children.print(g_context.indent_str);
+    *g_context.log << "->" << m_id << endl;
+    m_children.print(string(g_context.indent_str));
   }
 
   /** Runs the generator and begins propagating the data to it's children
@@ -157,8 +166,8 @@ class dag : public _dag_base<IDType> {
    * thread. This encapsulates a single pass across the DAG.
    */
   void push_once() {
-    OriginType *dat = m_source->update();
-    if (dat != nullptr) m_children.fan_out(dat);
+    unique_ptr<OriginType> dat = m_source->update();
+    if (dat.get() != nullptr) m_children.fan_out(std::move(dat));
   }
 
  private:

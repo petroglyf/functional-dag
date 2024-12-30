@@ -140,6 +140,10 @@ IncludeCategories:
     Priority:        2
     SortPriority:    0
     CaseSensitive:   false
+  - Regex:           '^<ext/.*\.hpp>'
+    Priority:        2
+    SortPriority:    0
+    CaseSensitive:   false
   - Regex:           '^<.*\.h>'
     Priority:        1
     SortPriority:    0
@@ -152,7 +156,7 @@ IncludeCategories:
     Priority:        3
     SortPriority:    0
     CaseSensitive:   false
-IncludeIsMainRegex: '([-_](test|unittest))?$'
+IncludeIsMainRegex: '([-_](tests|unittest))?$'
 IncludeIsMainSourceRegex: ''
 IndentAccessModifiers: false
 IndentCaseBlocks: false

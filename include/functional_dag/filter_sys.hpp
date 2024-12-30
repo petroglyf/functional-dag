@@ -10,10 +10,13 @@
  * @author ndepalma@alum.mit.edu
  */
 
+#include <functional_dag/error_codes.h>
+
 #include <functional_dag/dag_interface.hpp>
 #include <functional_dag/impl/dag_impl.hpp>
 
 namespace fn_dag {
+using namespace std;
 
 /** The DAG manager manages all of the dags created by the user. Think of it
  * like a forest of trees.
@@ -45,24 +48,28 @@ class dag_manager {
     clear();
   }
 
-  /** Implementation to template funcs must be visible to link correctly
+  /** This function adds a node to the graph.
    *
-   * Use this function to add a lambda function onto a parent.
+   * Use this function to add a lambda function onto the graph.
    *
    * @param _id The node's name for later referencing
    * @param _new_filter The lambda function to run fromt he parent
    * @param _onto The node ID of the parent to attach the lambda function on to.
    */
   template <typename In, typename Out>
-  void add_node(IDType _id, dag_node<In, Out> *_new_filter, IDType _onto) {
+  [[nodiscard]] expected<IDType, error_codes> add_node(
+      IDType _id, dag_node<In, Out> *_new_filter, const IDType &_onto) {
     if (_new_filter != nullptr) {
       for (auto t = m_all_dags.cbegin(); t != m_all_dags.cend(); t++) {
         if ((*t)->dag_contains(_onto) || (*t)->get_id() == _onto) {
           dag<In, IDType> *tptr = static_cast<dag<In, IDType> *>(*t);
-          tptr->add_filter(_id, _new_filter, _onto);
+          return tptr->add_filter(_id, _new_filter, _onto);
         }
       }
+    } else {
+      return unexpected(error_codes::NULL_PTR_ERROR);
     }
+    return unexpected(error_codes::PARENT_NOT_FOUND);
   }
 
   /** Containment function for checking presence
@@ -99,9 +106,7 @@ class dag_manager {
    *
    * @param _new_stream The new stream to print to for debug messaging.
    */
-  void set_logging_stream(std::ostream *_new_stream) {
-    m_context.log = _new_stream;
-  }
+  void set_logging_stream(ostream *_new_stream) { m_context.log = _new_stream; }
 
   /** Sets whether to run the DAGs on the same thread
    *
@@ -114,7 +119,7 @@ class dag_manager {
    * @param _is_single_threaded Whether or not new nodes and source nodes are on
    * same node.
    */
-  void run_single_threaded(bool _is_single_threaded) {
+  void run_single_threaded(const bool _is_single_threaded) {
     m_context.run_single_threaded = _is_single_threaded;
   }
 
@@ -131,15 +136,15 @@ class dag_manager {
    * something fails.
    */
   template <typename Out>
-  dag<Out, IDType> *add_dag(IDType _id, dag_source<Out> *_new_filter,
-                            bool _startImmediately) {
+  expected<dag<Out, IDType> *, error_codes> add_dag(
+      IDType _id, dag_source<Out> *_new_filter, bool _startImmediately) {
     if (_new_filter != nullptr) {
       dag<Out, IDType> *t =
           new dag<Out, IDType>(_id, _new_filter, m_context, _startImmediately);
       m_all_dags.push_back(t);
       return t;
     }
-    return nullptr;
+    return unexpected(error_codes::NULL_PTR_ERROR);
   }
 
   /** Print all of the trees for verification purposes
@@ -148,7 +153,7 @@ class dag_manager {
    * Defaults to std::cout.
    */
   void print_all_dags() {
-    *m_context.log << std::endl;
+    *m_context.log << endl;
     *m_context.log << "------------DAG Forest-----------\n";
     for (auto t = m_all_dags.cbegin(); t != m_all_dags.cend(); t++)
       (*t)->print();
