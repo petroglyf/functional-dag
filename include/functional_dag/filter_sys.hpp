@@ -67,8 +67,10 @@ class dag_manager {
         }
       }
     } else {
+      delete _new_filter;
       return unexpected(error_codes::NULL_PTR_ERROR);
     }
+    delete _new_filter;
     return unexpected(error_codes::PARENT_NOT_FOUND);
   }
 

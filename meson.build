@@ -7,7 +7,7 @@ project(
         'warning_level=3',
         'werror=true',
     ],
-    version: '0.5',
+    version: '1.0rc1',
     license: 'MIT',
     meson_version : '>= 1.1',
     license_files: 'LICENSE',
@@ -29,10 +29,13 @@ endif
 ####### Find the needed packages #########
 ##########################################
 catch_dep = dependency('catch2-with-main')
-jsoncpp_dep = dependency('jsoncpp')
 flatbuffers_dep = dependency('flatbuffers')
 pkg_fn = import('pkgconfig')
 fs_dep = import('fs')
+
+if fs_dep.is_dir('bulid/include') == false
+    run_command(find_program('mkdir'), '-p', 'build/include', check: true)
+endif
 
 ########################################
 ####### Building specification #########
@@ -65,14 +68,18 @@ error_codes_h = custom_target(
     command : ['flatc', '--reflect-types', '-o', 'include/functional_dag/', '--no-prefix', '--filename-suffix', '', '--cpp', '@INPUT@'],
 )
 
-error_codes_dep = declare_dependency (sources: error_codes_h)
+error_codes_dep = declare_dependency (
+    include_directories: ['include/'], 
+    sources: [error_codes_h], 
+    dependencies: [flatbuffers_dep],
+)
 
 functional_dag_lib = shared_library(
     'functional_dag',
     ['src/functional_dag/libutils.cpp', libspec_gen_h, guid_gen_h, libspec_bfbs, error_codes_h],
     cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()],
     include_directories: ['include/'],
-    dependencies: [jsoncpp_dep, flatbuffers_dep, error_codes_dep],
+    dependencies: [flatbuffers_dep, error_codes_dep],
     install: true,
     install_dir: shared_lib_dir,
 )
@@ -82,13 +89,13 @@ functional_dag_lib = shared_library(
 ########################################
 dag_tests = executable(
     'dag_tests',
-    ['test/functional_dag/dag_tests.cpp', libspec_gen_h, guid_gen_h],
+    ['test/functional_dag/dag_tests.cpp', libspec_gen_h, guid_gen_h, error_codes_h],
     include_directories: ['include/'],
     dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
 )
 lib_tests = executable(
     'lib_tests',
-    'test/functional_dag/lib_tests.cpp',
+    ['test/functional_dag/lib_tests.cpp', error_codes_h],
     include_directories: ['include/'],
     dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
     cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
@@ -97,7 +104,7 @@ lib_tests = executable(
 
 guid_tests = executable(
     'guid_tests',
-    'test/functional_dag/guid_tests.cpp',
+    ['test/functional_dag/guid_tests.cpp', error_codes_h],
     include_directories: ['include/'],
     dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
     link_with: [functional_dag_lib],
@@ -112,14 +119,14 @@ test('guid_tests', guid_tests)
 ########################################
 clangtidy = find_program('clang-tidy', required: false)
 if clangtidy.found()
+    checks_str = '-clang-diagnostic-*,modernize-*,cppcoreguidelines-*,-readability-*,llvm-header-guard,misc-noexcept-move-constructor,misc-move-const-arg'
     run_target(
-        'tidy',
+        'lint',
         command: [
             clangtidy,
-            #'--checks=*',
             '-p',
-            meson.project_source_root(),
-        ] + ['../src/functional_dag/libutils.cpp', '--', '-Iinclude/'],
+            meson.project_build_root(),
+        ] + ['../src/functional_dag/libutils.cpp', '-checks='+checks_str, '-warnings-as-errors=*'],
     )
 endif
 
