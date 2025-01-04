@@ -1,5 +1,14 @@
 #pragma once
-
+/** ---------------------------------------------
+ *    ___                 .___
+ *   |_  \              __| _/____     ____
+ *    /   \    ______  / __ |\__  \   / ___\
+ *   / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+ *  /_/  \__\         \____ |(____  /\___  /
+ *                         \/     \//_____/
+ * ---------------------------------------------
+ * @author ndepalma@alum.mit.edu
+ */
 #include <expected>
 #include <iostream>
 #include <sstream>
@@ -45,7 +54,7 @@ string GUID<T>::to_uuid() const {
   stringstream uuid{};
   uint32_t first_four_bytes = (_id.bits1() >> 4 * 8);
   uint16_t second_two_bytes = (_id.bits1() << 4 * 8) >> 6 * 8;
-  uint16_t last_two_bytes = (_id.bits1() & (255 << 8) + 255);
+  uint16_t last_two_bytes = (_id.bits1() & ((255 << 8) + 255));
 
   uint16_t first_two_bytes = (_id.bits2() >> 6 * 8);
   uint64_t last_six_bytes = (_id.bits2() << 2 * 8 >> 2 * 8);

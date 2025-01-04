@@ -1,19 +1,19 @@
-// ---------------------------------------------
-//    ___                 .___
-//   |_  \              __| _/____     ____
-//    /   \    ______  / __ |\__  \   / ___\
-//   / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
-//  /_/  \__\         \____ |(____  /\___  /
-//                         \/     \//_____/
-// ---------------------------------------------
-// @author ndepalma@alum.mit.edu
+/** ---------------------------------------------
+ *    ___                 .___
+ *   |_  \              __| _/____     ____
+ *    /   \    ______  / __ |\__  \   / ___\
+ *   / /\  \  /_____/ / /_/ | / __ \_/ /_/  >
+ *  /_/  \__\         \____ |(____  /\___  /
+ *                         \/     \//_____/
+ * ---------------------------------------------
+ * @author ndepalma@alum.mit.edu
+ */
 #include <dlfcn.h>
-#include <functional_dag/dlpack.h>
 #include <functional_dag/lib_utils.h>
-#include <stdlib.h>
 
 #include <algorithm>
 #include <cstdint>
+#include <cstdlib>
 #include <filesystem>
 #include <functional_dag/dag_interface.hpp>
 #include <list>
@@ -32,12 +32,13 @@ INCBIN(g, schema, STR(SCHEMA_FILE));
 static flatbuffers::Parser g_parser;
 static bool has_initialized = false;
 
-std::expected<flatbuffers::Parser *, fn_dag::error_codes> __get_parser() {
+auto __get_parser()
+    -> std::expected<flatbuffers::Parser *, fn_dag::error_codes> {
   if (has_initialized) return &g_parser;
 
-  std::string pipe_spec_data{
+  std::string pipe_spec_data(
       g_schema_start,
-      static_cast<size_t>((char *)&g_schema_end - (char *)&g_schema_start)};
+      static_cast<size_t>((char *)&g_schema_end - (char *)&g_schema_start));
 
   if (!g_parser.Deserialize(reinterpret_cast<uint8_t *>(pipe_spec_data.data()),
                             pipe_spec_data.size())) {
@@ -55,9 +56,10 @@ static const string dylib_suffix("dylib");
 static const string dylib_suffix("so");
 #endif
 
-[[nodiscard]] expected<vector<fs::directory_entry>, error_codes>
-get_all_available_libs(const fs::directory_entry &library_path) {
-  vector<fs::directory_entry> all_files{};
+[[nodiscard]] auto get_all_available_libs(
+    const fs::directory_entry &library_path)
+    -> expected<vector<fs::directory_entry>, error_codes> {
+  vector<fs::directory_entry> all_files(0);
 
   if (library_path.exists()) {
     for (const auto &entry : fs::directory_iterator(library_path.path()))
@@ -87,8 +89,13 @@ get_all_available_libs(const fs::directory_entry &library_path) {
 
 expected<bool, error_codes> library::load_lib(const fs::path _lib_path) {
   // Open the dynamic library
+#ifdef __APPLE__
   void *const lib_handle =
       dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_FIRST);
+#else
+  void *const lib_handle = dlopen(_lib_path.c_str(), RTLD_NOW | RTLD_GLOBAL);
+#endif
+
   if (lib_handle == nullptr) {
     return unexpected(error_codes::PATH_DOES_NOT_EXIST);
   }
