@@ -7,8 +7,8 @@ TEST_CASE("Check string conversion", "[guid.checking_to_from]") {
   const std::string_view guid_str("2253c551-dd08-4ff4-928d-9b1e8c586c14");
   if (auto res = fn_dag::GUID<int>::from_uuid(guid_str); res.has_value()) {
     fn_dag::GUID<int> guid = res.value();
-    REQUIRE(guid._id.bits1() == 2473537575747866612UL);
-    REQUIRE(guid._id.bits2() == 10560267256759610388UL);
+    REQUIRE(guid.m_id.bits1() == 2473537575747866612UL);
+    REQUIRE(guid.m_id.bits2() == 10560267256759610388UL);
     const std::string conv_guid_str = guid.to_uuid();
     bool gstr_comp = guid_str == conv_guid_str;
     REQUIRE(gstr_comp);

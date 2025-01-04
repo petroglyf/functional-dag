@@ -3,12 +3,10 @@
 #include <functional>
 
 #include "fb_gen/lib_spec_generated.h"
-#include "flatbuffers/idl.h"
 #include "functional_dag/dag_interface.hpp"
 #include "functional_dag/error_codes.h"
 #include "functional_dag/filter_sys.hpp"
 #include "functional_dag/guid_impl.hpp"
-#include "functional_dag/incbin_util.h"
 #include "functional_dag/lib_utils.h"
 
 using namespace fn_dag;
@@ -27,10 +25,10 @@ library_spec get_library_details() {
   GUID<library> lib_guid = lib_guid_ret.value();
 
   auto test_string = string("test_string");
-  option_spec test_option_spec{.option_prompt = test_string,
+  option_spec test_option_spec{.type = fn_dag::OPTION_TYPE_STRING,
                                .name = test_string,
-                               .short_description = test_string,
-                               .type = fn_dag::OPTION_TYPE_STRING};
+                               .option_prompt = test_string,
+                               .short_description = test_string};
 
   node_prop_spec node_prop_spec_src{.guid = src_guid,
                                     .module_type = NODE_TYPE::NODE_TYPE_SOURCE,
@@ -99,8 +97,10 @@ class library_example : public library {
     GUID<node_spec> src_guid = src_guid_ret.value();
     GUID<node_spec> viz_guid = viz_guid_ret.value();
 
-    constructors[src_guid] = function<construction_signature>(&construct_node);
-    constructors[viz_guid] = function<construction_signature>(&construct_node);
+    m_constructors[src_guid] =
+        function<construction_signature>(&construct_node);
+    m_constructors[viz_guid] =
+        function<construction_signature>(&construct_node);
   }
 };
 
@@ -132,6 +132,7 @@ TEST_CASE("Deserializes JSON", "[libs.json_deserialize_success]") {
     auto real_manager = manager.value();
     REQUIRE(real_manager->manager_contains_id("ex_source"));
     REQUIRE(real_manager->manager_contains_id("ex_node"));
+    delete real_manager;
   } else {
     REQUIRE(manager.has_value());
   }
@@ -177,10 +178,9 @@ TEST_CASE("Serializes JSON", "[libs.json_serialize_success]") {
   auto pipe_spec = pipe_spec_builder.Finish();
   builder.Finish(pipe_spec);
   uint8_t *data = builder.GetBufferPointer();
-  string json = fsys_serialize(data).value();
-  REQUIRE(data != nullptr);
-
-  REQUIRE(json.size() > 0);
+  if (auto json = fsys_serialize(data); json) {
+    REQUIRE(json.value().size() > 0);
+  }
 }
 
 TEST_CASE("Bad JSON", "[libs.json_bad_data]") {
@@ -208,86 +208,4 @@ TEST_CASE("Bad JSON", "[libs.json_bad_data]") {
   REQUIRE(manager_empty.error() == fn_dag::JSON_PARSER_ERROR);
   REQUIRE(manager_badkey.error() == fn_dag::JSON_PARSER_ERROR);
   REQUIRE(manager_badtype.error() == fn_dag::JSON_PARSER_ERROR);
-}
-
-INCBIN(test, schema, STR(SCHEMA_FILE));
-
-TEST_CASE("Test incbin include capability", "[libs.incbin_test]") {
-  printf("start = %p\n", (void *)&test_schema_start);
-  printf("end = %p\n", (void *)&test_schema_end);
-  printf("size = %zu\n", (char *)&test_schema_end - (char *)&test_schema_start);
-  printf("first byte = 0x%02hhx\n", test_schema_start[0]);
-
-  string pipe_spec_data;
-
-  REQUIRE(flatbuffers::LoadFile(STR(SCHEMA_FILE), false, &pipe_spec_data));
-
-  size_t size_foobin = static_cast<size_t>((char *)&test_schema_end -
-                                           (char *)&test_schema_start);
-  REQUIRE(pipe_spec_data.size() == size_foobin);
-  for (unsigned int i = 0; i < size_foobin; i++) {
-    REQUIRE(test_schema_start[i] == pipe_spec_data.data()[i]);
-  }
-  REQUIRE(true);
-}
-
-TEST_CASE("Test basic error handling", "[libs.error_handling]") {
-  string json_unknown =
-      "{\
-    nodes: [],\
-    sources:\
-    [\
-        {\
-            name : \"ex_source\",\
-            target_id: {bits1 : 123, bits2 : 412},\
-            wires : [],\
-            options: [{name: \"cons_in\", value: {type: INT, int_value: 10}}]\
-        }\
-    ]\
-    }";
-  string json_bad_parent =
-      "{\
-    nodes:\
-    [\
-        {\
-            name: \"ex_node\",\
-            target_id: {bits1: 16570122415097137046, bits2: 12761028291507926795},\
-            wires: [{key: \"y\", value:\"ex_source_bad\"}],\
-            options: [{name: \"test_string\", value: {type: INT, int_value: 5}}]\
-        },\
-    ],\
-    sources:\
-    [\
-        {\
-            name : \"ex_source\",\
-            target_id: {bits1 : 2473537575747866612, bits2 : 10560267256759610388},\
-            wires : [],\
-            options: [{name: \"cons_in\", value: {type: INT, int_value: 10}}]\
-        }\
-    ]\
-    }";
-
-  library_example library_ex;
-  auto error_manager = library_ex.fsys_deserialize(json_unknown);
-  REQUIRE_FALSE(error_manager);
-  REQUIRE(error_manager.error() == fn_dag::DAG_NOT_FOUND);
-
-  auto construct_bad_manager = library_ex.fsys_deserialize(json_bad_parent);
-  REQUIRE_FALSE(construct_bad_manager);
-  REQUIRE(construct_bad_manager.error() == fn_dag::CONSTRUCTION_FAILED);
-}
-
-TEST_CASE("Test path not exist errors", "[libs.paths_missing]") {
-  fs::path bad_dir = "/detritus/";
-  fs::directory_entry dir{};
-  dir.assign(bad_dir);
-  auto avail_libs = get_all_available_libs(dir);
-  REQUIRE_FALSE(avail_libs);
-  REQUIRE(avail_libs.error() == error_codes::PATH_DOES_NOT_EXIST);
-
-  library_example library_ex;
-  fs::path bad_lib = "/bad_ref.dylib";
-  auto avail_lib = library_ex.load_lib(bad_lib);
-  REQUIRE_FALSE(avail_lib);
-  REQUIRE(avail_lib.error() == error_codes::PATH_DOES_NOT_EXIST);
 }

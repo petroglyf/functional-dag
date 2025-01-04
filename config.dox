@@ -1002,8 +1002,7 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = include/functional_dag/core/ \
-                         include/functional_dag/dlpack.h
+EXCLUDE                = include/functional_dag/core/
 
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
@@ -1032,7 +1031,13 @@ EXCLUDE_SYMBOLS        = fn_dag::__dag_source \
                          fn_dag::__dag_node \
                          fn_dag::_dag_base \
                          fn_dag::_internal_dag_node \
-                         fn_dag::_abstract_internal_dag_node	
+                         fn_dag::_abstract_internal_dag_node \
+                         fn_dag::FLATBUFFERS_FINAL_CLASS \
+                         fn_dag::construction_optionBuilder \\
+                         fn_dag::option_valueBuilder \
+                         fn_dag::pipe_specBuilder \
+                         fn_dag::string_mappingBuilder \
+                         fn_dag::node_specBuilder
 
 # The EXAMPLE_PATH tag can be used to specify one or more files or directories
 # that contain example code fragments that are included (see the \include
