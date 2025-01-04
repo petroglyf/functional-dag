@@ -14,7 +14,7 @@ project(
 )
 
 if build_machine.subsystem() == 'macos'
-    homebrew_cellar = run_command('brew', '--cellar', check: true).stdout().strip()
+    homebrew_cellar = run_command(find_program('brew'), '--cellar', check: true).stdout().strip()
     install_cellar = homebrew_cellar + '/' + meson.project_name() + '/' + meson.project_version()
     include_install_dir = install_cellar + '/include'
     shared_lib_dir = install_cellar + '/lib'
