@@ -17,7 +17,7 @@ if build_machine.subsystem() == 'macos'
     # homebrew_cellar = run_command(find_program('brew'), '--cellar', check: true).stdout().strip()
     # homebrew_cellar = run_command('brew', '--cellar', check: true).stdout().strip()
     install_cellar = meson.project_name() + '/' + meson.project_version()
-    install_cellar = homebrew_cellar + '/' + meson.project_name() + '/' + meson.project_version()
+    # install_cellar = homebrew_cellar + '/' + meson.project_name() + '/' + meson.project_version()
     include_install_dir = install_cellar + '/include'
     shared_lib_dir = install_cellar + '/lib'
     pkg_config_install_dir = shared_lib_dir + '/pkgconfig'
@@ -137,7 +137,7 @@ endif
 ########################################
 ####### Install specification ##########
 ########################################
-install_subdir('include/functional_dag', install_dir: include_install_dir)  #homebrew_cellar+'/'+install_dir
+install_subdir('include/functional_dag', install_dir: include_install_dir)
 pkg_fn.generate(
     functional_dag_lib,
     description: 'A directed acyclic graph that runs a function on each node.',

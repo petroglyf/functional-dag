@@ -4,7 +4,7 @@ class FunctionalDag < Formula
   url "https://github.com/petroglyf/functional-dag/archive/refs/tags/brew-v1.0.tar.gz"
   version "1.0rc1"
   license "MIT"
-  sha256 "d93594dbaf39ae75ea90ccf17c33043e4eef97b4a9ae73372b8cb34337a176b9"
+  sha256 "8e165db80b507e1927edc4232efeb2d5a0441c1c81bc451c454044a06f17e8ba"
 
   # Don't yet support bottles!
   # bottle do
