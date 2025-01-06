@@ -4,7 +4,7 @@ class FunctionalDag < Formula
   url "https://github.com/petroglyf/functional-dag/archive/refs/tags/brew-v1.0.tar.gz"
   version "1.0rc1"
   license "MIT"
-  sha256 "ff0b7fa54c386fb6f91270b482d47f6c7d99e0534f81cc4e18110ccd23523c61"
+  sha256 "d93594dbaf39ae75ea90ccf17c33043e4eef97b4a9ae73372b8cb34337a176b9"
 
   # Don't yet support bottles!
   # bottle do
@@ -15,6 +15,7 @@ class FunctionalDag < Formula
   depends_on "meson" => :build
   depends_on "catch2" => :test
   depends_on "ninja" => :build
+  depends_on "flatbuffers" => :build
 
   def install
     system "meson", "setup", "build", *std_meson_args
