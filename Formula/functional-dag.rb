@@ -7,10 +7,10 @@ class FunctionalDag < Formula
   sha256 "ff0b7fa54c386fb6f91270b482d47f6c7d99e0534f81cc4e18110ccd23523c61"
 
   # Don't yet support bottles!
-  bottle do
-    cellar :any
-    sha1 "5466fbee57b366a41bbcec814614ee236e39bed8" => :sequoia
-  end
+  # bottle do
+  #   cellar :any
+  #   sha1 "5466fbee57b366a41bbcec814614ee236e39bed8" => :sequoia
+  # end
 
   depends_on "meson" => :build
   depends_on "catch2" => :test
