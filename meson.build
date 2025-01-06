@@ -29,12 +29,12 @@ endif
 ##########################################
 ####### Find the needed packages #########
 ##########################################
-catch_dep = dependency('catch2-with-main')
+catch_dep = dependency('catch2-with-main', required : false)
 flatbuffers_dep = dependency('flatbuffers')
 pkg_fn = import('pkgconfig')
 fs_dep = import('fs')
 
-if fs_dep.is_dir('bulid/include') == false
+if fs_dep.is_dir('build/include') == false
     run_command(find_program('mkdir'), '-p', 'build/include', check: true)
 endif
 
@@ -88,32 +88,34 @@ functional_dag_lib = shared_library(
 ########################################
 ####### Build the testing files ########
 ########################################
-dag_tests = executable(
-    'dag_tests',
-    ['test/functional_dag/dag_tests.cpp', libspec_gen_h, guid_gen_h, error_codes_h],
-    include_directories: ['include/'],
-    dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
-)
-lib_tests = executable(
-    'lib_tests',
-    ['test/functional_dag/lib_tests.cpp', error_codes_h],
-    include_directories: ['include/'],
-    dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
-    cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
-    link_with: [functional_dag_lib],
-)
+if catch_dep.found()
+  dag_tests = executable(
+      'dag_tests',
+      ['test/functional_dag/dag_tests.cpp', libspec_gen_h, guid_gen_h, error_codes_h],
+      include_directories: ['include/'],
+      dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
+  )
+  lib_tests = executable(
+      'lib_tests',
+      ['test/functional_dag/lib_tests.cpp', error_codes_h],
+      include_directories: ['include/'],
+      dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
+      cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
+      link_with: [functional_dag_lib],
+  )
 
-guid_tests = executable(
-    'guid_tests',
-    ['test/functional_dag/guid_tests.cpp', error_codes_h],
-    include_directories: ['include/'],
-    dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
-    link_with: [functional_dag_lib],
-)
+  guid_tests = executable(
+      'guid_tests',
+      ['test/functional_dag/guid_tests.cpp', error_codes_h],
+      include_directories: ['include/'],
+      dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
+      link_with: [functional_dag_lib],
+  )
 
-test('dag_tests', dag_tests)
-test('lib_tests', lib_tests)
-test('guid_tests', guid_tests)
+  test('dag_tests', dag_tests)
+  test('lib_tests', lib_tests)
+  test('guid_tests', guid_tests)
+endif
 
 ########################################
 ####### Lint command (optional) ########

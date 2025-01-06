@@ -18,7 +18,8 @@ class FunctionalDag < Formula
 
   def install
     system "meson", "setup", "build", *std_meson_args
-    system "meson", "compile", "-C", "build", "--verbose"
+    system "ninja", "-C", "build", "libfunctional_dag.dylib"
+    #system "meson", "compile", "-C", "build", "--verbose"
     system "meson", "install", "-C", "build"
   end
 
