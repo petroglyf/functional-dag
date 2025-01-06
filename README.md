@@ -1,4 +1,4 @@
-# libfunctional_dag (or lambdag $\lambda$g)
+# libfunctional_dag (λg)
 
 A functional dag is a multi-threaded design pattern that runs simple $\lambda$ functions, enforced to be structured as a directed acyclic graph (DAG). This project enforces one other important quality which is being strongly typed. Users of this library will know, right away, that types are incompatible during compile time which reduces runtime checking during message passing between the nodes.
 
@@ -8,9 +8,9 @@ Cognitive architectures can become very complicated very fast. Typically when de
 ### Build and install
 OS Support: ![Ubuntu](https://img.shields.io/badge/-Ubuntu-grey?logo=ubuntu) ![macOS](https://img.shields.io/badge/-macOS-grey?logo=macos)
 
-Status: [![Ubuntu Build](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-build.yml/badge.svg?branch=main)](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-build.yml?query=branch%3Amain)  [![Ubuntu Test](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-test.yml/badge.svg?branch=main)](https://github.com/petroglyf/functional-dag/actions/workflows/cmake-ubuntu-test.yml?query=branch%3Amain)
+Status: [![Ubuntu Build and Test](https://github.com/petroglyf/functional-dag/actions/workflows/ubuntu-build.yml/badge.svg?branch=main)](https://github.com/petroglyf/functional-dag/actions/workflows/ubuntu-build.yml?query=branch%3Amain)
 
-The build is CMake based and is built for cxx20 standards. First class build support is given to Ubuntu and MacOS through the [homebrew](https://brew.sh/) infrastrucure.
+The build is Meson based and is built for cxx23 standards. First class build support is given to Ubuntu and MacOS through the [homebrew](https://brew.sh/) and aptitude infrastrucure.
 
 #### Installing via homebrew
 ```bash
@@ -41,22 +41,19 @@ Then you would create 2 sources, and 3 nodes where 2 of the nodes are simple fun
 
 filter_sys.hpp provides the main hooks into the library. All you need to do is `#include <functional-dag/filter_sys.hpp` and create a dag. 
 
-API docs can be found [here](https://petrogly-ph.github.io/functional-dag/annotated.html).
+API docs can be found [here](https://petroglyf.github.io/functional-dag/annotated.html).
 ### Build dependencies
 This project tries to minimize dependencies so as to not stack dependencies across larger projects and to make it easier to build simple layers to other languages like python. 
 
 Build dependencies:
-* Cmake
-* jsoncpp 
-* ctest (if you want to unit test)
-* clang-tidy (if you want to lint the code as well)
-* doxygen (if you would like to generate docs)
-
-Dependencies during testing:
-* Catch2 (for unit testing)
+* [Meson](https://mesonbuild.com/)
+* [Flatbuffers](https://flatbuffers.dev/)
+* [Catch2](https://github.com/catchorg/Catch2) (if you want to unit test)
+* [clang-tidy](https://clang.llvm.org/extra/clang-tidy/) (if you want to lint the code as well)
+* [doxygen](https://www.doxygen.nl/index.html) (if you would like to generate docs)
 
 Runtime dependencies
-* jsoncpp
+* flatbuffers
 
 
 ### How to contribute to the code
