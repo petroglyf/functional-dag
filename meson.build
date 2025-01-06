@@ -14,8 +14,8 @@ project(
 )
 
 if build_machine.subsystem() == 'macos'
-    include_install_dir = '/include'
-    shared_lib_dir = '/lib'
+    include_install_dir = 'include'
+    shared_lib_dir = 'lib'
     pkg_config_install_dir = shared_lib_dir + '/pkgconfig'
 else
     include_install_dir = '/usr/include'
