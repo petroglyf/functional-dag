@@ -3,7 +3,7 @@ Priority: optional
 Maintainer: Nick DePalma <ndepalma@alum.mit.edu>
 Standards-Version: 4.6.2
 Homepage: https://github.com/petroglyf/functional-dag
-Architecture: arm64
+Architecture: amd64
 Multi-Arch: foreign
 Description: A directed acyclic graph that runs a function on each node.
 Section: devel

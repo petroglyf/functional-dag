@@ -18,7 +18,8 @@
 #include <string>
 #include <vector>
 
-#include "fb_gen/lib_spec_generated.h"
+#include "functional_dag/error_codes.h"
+#include "functional_dag/lib_spec_generated.h"
 
 namespace fn_dag {
 using namespace std;
@@ -43,12 +44,18 @@ typedef struct option_spec {
 typedef struct node_prop_spec {
   /// The node's unique identifier.
   GUID<node_prop_spec> guid;
+  /// The name of the generic node.
+  string name;
+  /// Description of the generic node.
+  string description;
   /// The type of module - whether it generates data from a sensor or processes
   /// data.
   NODE_TYPE module_type = NODE_TYPE::NODE_TYPE_UNDEFINED;
   /// The options that should be specified to create the node.
   vector<option_spec> construction_types;
 } node_prop_spec;
+
+struct library_spec;  // a forward declaration of the library_spec struct
 
 /** (Library related) A library defines what is needed to construct a dag tree.
  *
@@ -80,8 +87,17 @@ class library {
   expected<bool, fn_dag::error_codes> _create_node(
       dag_manager<string> &_manager, const fn_dag::node_spec *const _spec);
 
+  /// This is a list of all of the libraries that have been loaded so far.
+  std::vector<library_spec> m_library_specs;
+
  public:
   library() = default;
+
+  /** A way to iterate through the loaded libraries.
+   *
+   * @return A read only iterator view for the loaded library specs.
+   */
+  [[nodiscard]] std::span<const library_spec> get_spec_iter();
 
   /** A quick and easy function to test whether a dynamic library conforms to
    * the library specifications.
@@ -117,9 +133,15 @@ class library {
    * This function takes a directory and iterates through the .so or .dylibs. It
    * will preflight them and load them if they are indeed compatible.
    *
-   * @param _library_path A path where many .so and .dylibs are expected to be.
+   * @param _library_path A path or list of paths where many .so and .dylibs are
+   * expected to be.
+   * @param _logger An output stream for potential logging. Defaults to stdout.
    */
-  void load_all_available_libs(const fs::directory_entry &_library_path);
+  expected<bool, error_codes> load_all_available_libs(
+      const fs::directory_entry &_library_path, ostream &_logger = cout);
+  void load_all_available_libs(
+      const vector<fs::directory_entry> &_library_paths,
+      ostream &_logger = cout);
 
   /** Takes highly structured JSON in and turns it into a lambda dag.
    *
@@ -129,11 +151,15 @@ class library {
    * specified in the JSON file is available.
    *
    * @param _json_in The JSON specification to create the DAG structure.
+   * @param run_single_threaded Whether or not to run the DAGs on the same
+   * thread. This is useful for debugging but not recommended for production
+   * code. (optional)
    * @return A normal dag manager to start/stop/modify if successful and an
    * error if unsuccessful.
    */
   [[nodiscard]] expected<fn_dag::dag_manager<string> *, fn_dag::error_codes>
-  fsys_deserialize(const string &_json_in);
+  fsys_deserialize(const string &_json_in,
+                   const bool run_single_threaded = false);
 };
 
 /** Similar to load_all_available_libs, this function will retreive compatible

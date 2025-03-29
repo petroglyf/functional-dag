@@ -2,12 +2,12 @@
 #include <catch2/catch_test_macros.hpp>
 #include <functional>
 
-#include "fb_gen/lib_spec_generated.h"
 #include "functional_dag/dag_interface.hpp"
 #include "functional_dag/error_codes.h"
 #include "functional_dag/filter_sys.hpp"
 #include "functional_dag/guid_impl.hpp"
-#include "functional_dag/lib_utils.h"
+#include "functional_dag/lib_spec_generated.h"
+#include "functional_dag/libutils.h"
 
 using namespace fn_dag;
 using namespace std;
@@ -31,10 +31,14 @@ library_spec get_library_details() {
                                .short_description = test_string};
 
   node_prop_spec node_prop_spec_src{.guid = src_guid,
+                                    .name = "test_source",
+                                    .description = "test_source details",
                                     .module_type = NODE_TYPE::NODE_TYPE_SOURCE,
                                     .construction_types = {test_option_spec}};
 
   node_prop_spec node_prop_spec_viz{.guid = viz_guid,
+                                    .name = "test_viz",
+                                    .description = "test_viz details",
                                     .module_type = NODE_TYPE::NODE_TYPE_FILTER,
                                     .construction_types = {test_option_spec}};
 

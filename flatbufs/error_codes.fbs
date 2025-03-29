@@ -33,5 +33,6 @@ enum error_codes : uint16 {
   ///< This shouldn't happen. It means the JSON loaded but did not conform to DAG structure.
   MODULE_TYPE_UNSUPPORTED, 
   ///< This means the library is trying to load a node that isn't yet supported. 
-  UNUSED,
+  GUID_COLLISION, 
+  ///< This means a unique node being loaded already exists in the cache. 
 }

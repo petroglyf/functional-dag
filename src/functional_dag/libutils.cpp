@@ -9,7 +9,7 @@
  * @author ndepalma@alum.mit.edu
  */
 #include <dlfcn.h>
-#include <functional_dag/lib_utils.h>
+#include <functional_dag/libutils.h>
 
 #include <algorithm>
 #include <cstdint>
@@ -22,11 +22,11 @@
 #include <string>
 #include <vector>
 
-#include "fb_gen/lib_spec_generated.h"
 #include "flatbuffers/flatbuffer_builder.h"
 #include "flatbuffers/idl.h"
 #include "functional_dag/error_codes.h"
 #include "functional_dag/incbin_util.h"
+#include "functional_dag/lib_spec_generated.h"
 
 INCBIN(g, schema, STR(SCHEMA_FILE));
 
@@ -72,6 +72,32 @@ static const string dylib_suffix("so");
   }
 
   return all_files;
+}
+
+expected<bool, error_codes> library::load_all_available_libs(
+    const fs::directory_entry &_library_path, ostream &_logger) {
+  if (_library_path.exists()) {
+    for (const auto &entry : fs::directory_iterator(_library_path.path()))
+      if (entry.path().string().ends_with(dylib_suffix)) {
+        if (auto err_code = load_lib(entry); !err_code.has_value()) {
+          _logger << "Unable to load " << entry
+                  << " due to error code: " << err_code.error();
+        }
+      }
+  } else {
+    return unexpected(error_codes::PATH_DOES_NOT_EXIST);
+  }
+
+  return true;
+}
+void library::load_all_available_libs(
+    const vector<fs::directory_entry> &_library_paths, ostream &_logger) {
+  for (const fs::directory_entry &lib_dir : _library_paths) {
+    if (!load_all_available_libs(lib_dir, _logger)) {
+      // A warning was printed out. That's enough since this is all available
+      // libraries.
+    }
+  }
 }
 
 [[nodiscard]] auto library::preflight_lib(const fs::path _lib_path) -> bool {
@@ -125,7 +151,9 @@ auto library::load_lib(const fs::path _lib_path)
     if (constructor == nullptr) {
       return unexpected(error_codes::NO_CONSTRUCTOR);
     }
-
+    if (m_constructors.contains(guid)) {
+      return unexpected(error_codes::GUID_COLLISION);
+    }
     m_constructors[guid] = function<construction_signature>(constructor);
 
     switch (spec.module_type) {
@@ -138,7 +166,13 @@ auto library::load_lib(const fs::path _lib_path)
     }
   }
 
+  m_library_specs.push_back(specification);
+
   return true;
+}
+
+span<const library_spec> library::get_spec_iter() {
+  return std::span(m_library_specs.cbegin(), m_library_specs.cend());
 }
 
 auto fsys_serialize(const uint8_t *const _buffer_in)
@@ -173,7 +207,8 @@ auto library::_create_node(dag_manager<string> &_manager,
   return unexpected(error_codes::GUID_CONSTRUCTION_FAILED);
 }
 
-[[nodiscard]] auto library::fsys_deserialize(const string &_json_in)
+[[nodiscard]] auto library::fsys_deserialize(const string &_json_in,
+                                             const bool run_single_threaded)
     -> expected<dag_manager<string> *, error_codes> {
   const auto parser = __get_parser();
   if (parser.has_value()) {
@@ -183,6 +218,9 @@ auto library::_create_node(dag_manager<string> &_manager,
 
     set<string_view> nodes_added({});
     auto manager = new dag_manager<string>();
+    if (run_single_threaded) {
+      manager->run_single_threaded(true);
+    }
     const flatbuffers::FlatBufferBuilder &buffer = parser.value()->builder_;
 
     flatbuffers::Verifier verifier(buffer.GetBufferPointer(), buffer.GetSize());

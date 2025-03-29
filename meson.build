@@ -42,7 +42,7 @@ libspec_gen_h = custom_target(
     'lib_spec_generate',
     output : 'lib_spec_generated.h',
     input : 'flatbufs/lib_spec.fbs',
-    command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
+    command : ['flatc', '--reflect-types', '-o', 'include/functional_dag/', '--cpp', '@INPUT@'],
 )
 
 libspec_bfbs = custom_target(
@@ -56,7 +56,7 @@ guid_gen_h = custom_target(
     'guid_generate',
     output : 'guid_generated.h',
     input : 'flatbufs/guid.fbs',
-    command : ['flatc', '--reflect-types', '-o', 'fb_gen/', '--cpp', '@INPUT@'],
+    command : ['flatc', '--reflect-types', '-o', 'include/functional_dag/', '--cpp', '@INPUT@'],
 )
 
 error_codes_h = custom_target(
@@ -66,9 +66,9 @@ error_codes_h = custom_target(
     command : ['flatc', '--reflect-types', '-o', 'include/functional_dag/', '--no-prefix', '--filename-suffix', '', '--cpp', '@INPUT@'],
 )
 
-error_codes_dep = declare_dependency (
+generated_dep = declare_dependency (
     include_directories: ['include/'], 
-    sources: [error_codes_h], 
+    sources: [error_codes_h, libspec_gen_h, guid_gen_h], 
     dependencies: [flatbuffers_dep],
 )
 
@@ -77,7 +77,7 @@ functional_dag_lib = shared_library(
     ['src/functional_dag/libutils.cpp', libspec_gen_h, guid_gen_h, libspec_bfbs, error_codes_h],
     cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()],
     include_directories: ['include/'],
-    dependencies: [flatbuffers_dep, error_codes_dep],
+    dependencies: [flatbuffers_dep, generated_dep],
     install: true,
     install_dir: shared_lib_dir,
 )
@@ -90,13 +90,13 @@ if catch_dep.found()
       'dag_tests',
       ['test/functional_dag/dag_tests.cpp', libspec_gen_h, guid_gen_h, error_codes_h],
       include_directories: ['include/'],
-      dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
+      dependencies: [catch_dep, flatbuffers_dep, generated_dep],
   )
   lib_tests = executable(
       'lib_tests',
       ['test/functional_dag/lib_tests.cpp', error_codes_h],
       include_directories: ['include/'],
-      dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
+      dependencies: [catch_dep, flatbuffers_dep, generated_dep],
       cpp_args: ['-DSCHEMA_FILE='+libspec_bfbs.full_path()+''],
       link_with: [functional_dag_lib],
   )
@@ -105,7 +105,7 @@ if catch_dep.found()
       'guid_tests',
       ['test/functional_dag/guid_tests.cpp', error_codes_h],
       include_directories: ['include/'],
-      dependencies: [catch_dep, flatbuffers_dep, error_codes_dep],
+      dependencies: [catch_dep, flatbuffers_dep, generated_dep],
       link_with: [functional_dag_lib],
   )
 
@@ -134,6 +134,7 @@ endif
 ####### Install specification ##########
 ########################################
 install_subdir('include/functional_dag', install_dir: include_install_dir)
+install_subdir(meson.current_build_dir()+'/include/functional_dag', install_dir: include_install_dir)
 pkg_fn.generate(
     functional_dag_lib,
     description: 'A directed acyclic graph that runs a function on each node.',

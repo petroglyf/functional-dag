@@ -18,8 +18,6 @@
 #include <thread>
 #include <vector>
 
-#include "include/functional_dag/error_codes.h"
-
 namespace fn_dag {
 using namespace std;
 
