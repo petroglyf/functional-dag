@@ -15,6 +15,7 @@
 #include <functional_dag/filter_sys.hpp>
 #include <functional_dag/guid_impl.hpp>
 #include <map>
+#include <span>
 #include <string>
 #include <vector>
 
