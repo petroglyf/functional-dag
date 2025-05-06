@@ -4,7 +4,7 @@ class FunctionalDag < Formula
   url "https://github.com/petroglyf/functional-dag/archive/refs/tags/brew-v1.0.tar.gz"
   version "1.0"
   license "MIT"
-  sha256 "24a7db0ae53871cfe9c9f35e81077a419f6d8880d7481ec2a924a81519e74653"
+  sha256 "e6a91796675e4a247b5e68fa24167d066bac0e340a6e62d5ec49050f7d52f33e"
 
   depends_on "meson" => :build
   depends_on "catch2" => :test
