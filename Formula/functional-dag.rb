@@ -1,8 +1,8 @@
 class FunctionalDag < Formula
   desc "This library is used for building functional dags"
   homepage "https://github.com/petrogly-ph/functional-dag"
-  url "https://github.com/petroglyf/functional-dag/archive/refs/tags/brew-v1.0rc1.tar.gz"
-  version "1.0rc1"
+  url "https://github.com/petroglyf/functional-dag/archive/refs/tags/brew-v1.0.tar.gz"
+  version "1.0"
   license "MIT"
   sha256 "24a7db0ae53871cfe9c9f35e81077a419f6d8880d7485ec2a924a81519e74653"
 

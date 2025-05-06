@@ -7,5 +7,5 @@ Architecture: amd64
 Multi-Arch: foreign
 Description: A directed acyclic graph that runs a function on each node.
 Section: devel
-Version: 1.0rc1
+Version: 1.0
 Bugs: https://github.com/petroglyf/functional-dag/issues

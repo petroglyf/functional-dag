@@ -7,7 +7,7 @@ project(
         'warning_level=3',
         'werror=true',
     ],
-    version: '1.0rc1',
+    version: '1.0',
     license: 'MIT',
     meson_version : '>= 1.1',
     license_files: 'LICENSE',
